@@ -1,3 +1,4 @@
 data
 .idea
 sdc_gym
+__pycache__/
