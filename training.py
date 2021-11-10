@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import random
 import time
-import math
 
 from network import ClassificationNetwork
 from demonstrations import load_demonstrations
@@ -13,7 +12,8 @@ def train(data_folder, trained_network_file):
     Function for training the network.
     """
     infer_action = ClassificationNetwork()
-    optimizer = torch.optim.Adam(infer_action.parameters(), lr=3e-4)
+    max_lr = 1e-3
+    optimizer = torch.optim.Adam(infer_action.parameters(), lr=max_lr)
     #loss_function = nn.CrossEntropyLoss()
     loss_function = nn.MSELoss()
 
@@ -32,12 +32,13 @@ def train(data_folder, trained_network_file):
 
     nr_epochs = 100
     batch_size = 64
+    steps_per_epoch = len(batches) // batch_size
     start_time = time.time()
 
-    # Scheduler https://arxiv.org/pdf/1812.01187.pdf
-    # https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#OneCycleLR
-    lf = lambda x: (((1 + math.cos(x * math.pi / nr_epochs)) / 2) ** 1.0) * 0.8 + 0.2  # cosine
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                    max_lr=max_lr,
+                                                    epochs=nr_epochs,
+                                                    steps_per_epoch=steps_per_epoch)
 
     for epoch in range(nr_epochs):
         random.shuffle(batches)
@@ -49,7 +50,7 @@ def train(data_folder, trained_network_file):
             batch_in.append(batch[0].to(device))
             batch_gt.append(batch[1].to(device))
 
-            if (batch_idx + 1) % batch_size == 0 or batch_idx == len(batches) - 1:
+            if (batch_idx + 1) % batch_size == 0:  # last 39 elements are cut off and not used for batch
                 batch_in = torch.reshape(torch.cat(batch_in, dim=0),
                                          (-1, 96, 96, 3))
                 batch_gt = torch.reshape(torch.cat(batch_gt, dim=0),
@@ -66,7 +67,7 @@ def train(data_folder, trained_network_file):
                 batch_in = []
                 batch_gt = []
 
-        scheduler.step()
+                scheduler.step()
 
         time_per_epoch = (time.time() - start_time) / (epoch + 1)
         time_left = (1.0 * time_per_epoch) * (nr_epochs - 1 - epoch)
