@@ -7,7 +7,6 @@ except:
     print("Please note that you can't collect data on the cluster.")
 
 
-
 def load_demonstrations(data_folder):
     """
     1.1 a)
@@ -20,7 +19,30 @@ def load_demonstrations(data_folder):
     observations:   python list of N numpy.ndarrays of size (96, 96, 3)
     actions:        python list of N numpy.ndarrays of size 3
     """
-    pass
+    # load paths
+    files = [f for f in os.listdir(data_folder) if os.path.isfile(os.path.join(data_folder, f))]
+    obs_paths = []
+    action_paths = []
+
+    for f in files:
+        if f.startswith("observation"):
+            obs_paths.append(f)
+        elif f.startswith("action"):
+            action_paths.append(f)
+
+    # sort to match observations and actions
+    obs_paths.sort()
+    action_paths.sort()
+
+    # append directory to file names
+    obs_paths = [os.path.join(data_folder, f) for f in obs_paths]
+    action_paths = [os.path.join(data_folder, f) for f in action_paths]
+
+    # load numpy files
+    observations = [np.load(f) for f in obs_paths]
+    actions = [np.load(f) for f in action_paths]
+
+    return observations, actions
 
 
 def save_demonstrations(data_folder, actions, observations):
@@ -114,3 +136,5 @@ def record_demonstrations(demonstrations_folder):
         status.stop = False
         env.close()
 
+
+load_demonstrations("/home/joschi/Documents/Studium/WS2122/Self-driving Cars/sdc_challenges/data/teacher_new/")
