@@ -1,4 +1,5 @@
 import torch
+from torchvision import models
 from torchvision import transforms
 
 
@@ -14,12 +15,15 @@ class ClassificationNetwork(torch.nn.Module):
         # setting device on GPU if available, else CPU
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                              std=[0.229, 0.224, 0.225])
         self.to_grayscale = transforms.Grayscale(num_output_channels=1)
         self.augment = torch.nn.Sequential(
             transforms.RandomAffine(degrees=20, translate=(0.1, 0.1)),
             transforms.RandomErasing(scale=(0.02, 0.1)),
         )
 
+        """
         self.cnn = torch.nn.Sequential(
             torch.nn.Conv2d(1, 32, kernel_size=3, stride=2, padding=1),
             torch.nn.BatchNorm2d(32),
@@ -32,14 +36,18 @@ class ClassificationNetwork(torch.nn.Module):
             torch.nn.LeakyReLU(negative_slope=0.2),
             torch.nn.Flatten()
         )
+        """
+        self.cnn = torch.nn.Sequential(*(list(models.regnet_y_400mf(pretrained=True).children())[:-1]))
+
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(9223, 128),  # nr_cnn_output feature maps + 7 sensor values
+            torch.nn.Linear(447, 128),  # nr_cnn_output feature maps + 7 sensor values
             torch.nn.Dropout(p=0.3),
             torch.nn.LeakyReLU(negative_slope=0.2),
             torch.nn.Linear(128, 64),
+            torch.nn.Dropout(p=0.3),
             torch.nn.LeakyReLU(negative_slope=0.2),
-            torch.nn.Linear(64, 2, bias=False),
-            torch.nn.Tanh()
+            torch.nn.Linear(64, 4, bias=False),
+            torch.nn.Sigmoid()
         )
 
         if torch.cuda.is_available():
@@ -56,28 +64,43 @@ class ClassificationNetwork(torch.nn.Module):
         """
         batch_size = observation.shape[0]
         sensor_values = self.extract_sensor_values(observation, batch_size)
-        sensor_values = torch.cat(sensor_values, dim=1)
+        sensor_values = torch.cat(sensor_values, dim=1)[:, :, None, None]
 
         x = observation.permute(0, 3, 1, 2)
-        x = self.to_grayscale(x)
+        #x = self.to_grayscale(x)
         if self.training:
             x = self.augment(x)
         x = x / 255.
+        x = self.normalize(x)
         x = self.cnn(x)
-        x = torch.cat((x, sensor_values), dim=1)
+        x = torch.cat((x, sensor_values), dim=1).squeeze()
         x = self.mlp(x)
+
         return x
 
-    def actions_to_classes(self, actions):
+    def actions_to_multiclass(self, actions):
         """
         1.1 c)
         For a given set of actions map every action to its corresponding
-        action-class representation. Every action is represented by a 1-dim vector 
-        with the entry corresponding to the class number.
+        action-class representation. Every action is represented by a 5-dim vector
+        with the entry corresponding to the multiclass output. The classes
+        correspond to the four possible keys "Right", "Left", "Gas" and "Brake".
         actions:        python list of N torch.Tensors of size 3
-        return          python list of N torch.Tensors of size 1
+        return          python list of N torch.Tensors of size 4
         """
-        pass
+        multiclass = [torch.zeros(4) for _ in actions]
+        for i, a in enumerate(actions):
+            # add steering
+            if a[0] > 0:  # right
+                multiclass[i][0] = a[0]
+            elif a[0] < 0:  # left
+                multiclass[i][1] = -a[0]
+            # add gas
+            multiclass[i][2] = a[1]
+            # add brake
+            multiclass[i][3] = a[2]
+
+        return multiclass
 
     def actions_to_regs(self, actions):
         """
@@ -120,23 +143,33 @@ class ClassificationNetwork(torch.nn.Module):
         Maps the scores predicted by the network to an action-class and returns
         the corresponding action [steer, gas, brake].
                         C = number of classes
-        scores:         python list of torch.Tensors of size 2
+        scores:         python list of torch.Tensors of size 4
         return          (float, float, float)
         """
         if scores.is_cuda:
             scores = scores.cpu()
         scores = scores.detach()
-        score = scores[0]
-        steering = score[0].item()
-        gas, brake = 0., 0.
+        score = scores.squeeze()
+        right = score[0].item()
+        left = score[1].item()
+        gas = score[2].item()
+        brake = score[3].item()
 
-        long_contrl = score[1].item()
-        if long_contrl > 0.:
-            gas = long_contrl * 0.5
-            brake = 0.
-        elif long_contrl < 0.:
-            gas = 0.
-            brake = abs(long_contrl * 0.8)
+        # Only retain max steering and max longitudinal movement
+        if right > left:
+            steering = right
+        elif left > right:
+            steering = -left
+        else:
+            steering = 0
+
+        if gas > brake:
+            brake = 0
+        elif brake > gas:
+            gas = 0
+        else:
+            gas, brake = 0, 0
+
         return steering, gas, brake
 
     def extract_sensor_values(self, observation, batch_size):

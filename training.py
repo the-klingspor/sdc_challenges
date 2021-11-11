@@ -12,25 +12,21 @@ def train(data_folder, trained_network_file):
     Function for training the network.
     """
     infer_action = ClassificationNetwork()
-    max_lr = 1e-3
+    max_lr = 1e-4
     optimizer = torch.optim.Adam(infer_action.parameters(), lr=max_lr)
-    #loss_function = nn.CrossEntropyLoss()
-    loss_function = nn.MSELoss()
+    loss_function = nn.BCELoss()
 
     observations, actions = load_demonstrations(data_folder)
     observations = [torch.Tensor(observation) for observation in observations]
     actions = [torch.Tensor(action) for action in actions]
 
-    #batches = [batch for batch in zip(observations,
-    #                                  infer_action.actions_to_classes(actions))]
-    # use regression training instead of binary classes
     batches = [batch for batch in zip(observations,
-                                      infer_action.actions_to_regs(actions))]
+                                      infer_action.actions_to_multiclass(actions))]
 
     # setting device on GPU if available, else CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    nr_epochs = 2000
+    nr_epochs = 200
     batch_size = 64
     steps_per_epoch = len(batches) // batch_size
     start_time = time.time()
@@ -55,7 +51,7 @@ def train(data_folder, trained_network_file):
                 batch_in = torch.reshape(torch.cat(batch_in, dim=0),
                                          (-1, 96, 96, 3))
                 batch_gt = torch.reshape(torch.cat(batch_gt, dim=0),
-                                         (-1, 2))
+                                         (-1, 4))
 
                 batch_out = infer_action(batch_in)
                 loss = loss_function(batch_out, batch_gt)
