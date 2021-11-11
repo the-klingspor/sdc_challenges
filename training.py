@@ -30,7 +30,7 @@ def train(data_folder, trained_network_file):
     # setting device on GPU if available, else CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    nr_epochs = 100
+    nr_epochs = 2000
     batch_size = 64
     steps_per_epoch = len(batches) // batch_size
     start_time = time.time()
@@ -39,6 +39,7 @@ def train(data_folder, trained_network_file):
                                                     max_lr=max_lr,
                                                     epochs=nr_epochs,
                                                     steps_per_epoch=steps_per_epoch)
+    infer_action.train()
 
     for epoch in range(nr_epochs):
         random.shuffle(batches)

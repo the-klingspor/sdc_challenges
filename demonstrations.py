@@ -137,4 +137,4 @@ def record_demonstrations(demonstrations_folder):
         env.close()
 
 
-load_demonstrations("/home/joschi/Documents/Studium/WS2122/Self-driving Cars/sdc_challenges/data/teacher_new/")
+load_demonstrations("/home/joschi/Documents/Studium/WS2122/Self-driving Cars/sdc_challenges/data/teacher_old/")
