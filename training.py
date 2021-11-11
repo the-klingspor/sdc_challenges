@@ -12,7 +12,7 @@ def train(data_folder, trained_network_file):
     Function for training the network.
     """
     infer_action = ClassificationNetwork()
-    max_lr = 1e-4
+    max_lr = 1e-3
     optimizer = torch.optim.Adam(infer_action.parameters(), lr=max_lr)
     loss_function = nn.BCELoss()
 

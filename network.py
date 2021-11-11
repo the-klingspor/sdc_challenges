@@ -18,12 +18,15 @@ class ClassificationNetwork(torch.nn.Module):
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                               std=[0.229, 0.224, 0.225])
         self.to_grayscale = transforms.Grayscale(num_output_channels=1)
+
         self.augment = torch.nn.Sequential(
-            transforms.RandomAffine(degrees=20, translate=(0.1, 0.1)),
+            transforms.RandomRotation(degrees=20,
+                                      fill=(102, 204, 102),
+                                      center=(0.75, 0.5)),
             transforms.RandomErasing(scale=(0.02, 0.1)),
         )
 
-        """
+        #"""
         self.cnn = torch.nn.Sequential(
             torch.nn.Conv2d(1, 32, kernel_size=3, stride=2, padding=1),
             torch.nn.BatchNorm2d(32),
@@ -38,13 +41,12 @@ class ClassificationNetwork(torch.nn.Module):
         )
         """
         self.cnn = torch.nn.Sequential(*(list(models.regnet_y_400mf(pretrained=True).children())[:-1]))
-
+        """
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(447, 128),  # nr_cnn_output feature maps + 7 sensor values
+            torch.nn.Linear(9223, 128),  # nr_cnn_output feature maps + 7 sensor values
             torch.nn.Dropout(p=0.3),
             torch.nn.LeakyReLU(negative_slope=0.2),
             torch.nn.Linear(128, 64),
-            torch.nn.Dropout(p=0.3),
             torch.nn.LeakyReLU(negative_slope=0.2),
             torch.nn.Linear(64, 4, bias=False),
             torch.nn.Sigmoid()
@@ -64,14 +66,14 @@ class ClassificationNetwork(torch.nn.Module):
         """
         batch_size = observation.shape[0]
         sensor_values = self.extract_sensor_values(observation, batch_size)
-        sensor_values = torch.cat(sensor_values, dim=1)[:, :, None, None]
+        sensor_values = torch.cat(sensor_values, dim=1)
 
         x = observation.permute(0, 3, 1, 2)
-        #x = self.to_grayscale(x)
         if self.training:
             x = self.augment(x)
+        x = self.to_grayscale(x)
         x = x / 255.
-        x = self.normalize(x)
+        #x = self.normalize(x)
         x = self.cnn(x)
         x = torch.cat((x, sensor_values), dim=1).squeeze()
         x = self.mlp(x)
@@ -125,15 +127,6 @@ class ClassificationNetwork(torch.nn.Module):
                 reg_output[i][1] = -1.
             elif a[1] > 0:  # gas
                 reg_output[i][1] = 1.
-
-        """
-        # Control if actions are parsed and parsed back correctly
-        for i in range(500):
-            print(actions[i])
-            print(reg_output[i])
-            print(self.scores_to_action(reg_output[i][None, :]))
-            print("_____")
-        """
 
         return reg_output
 

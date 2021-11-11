@@ -5,6 +5,7 @@ import argparse
 import os
 import re
 
+
 if __name__ == "__main__":
     main_parser = argparse.ArgumentParser()
 
@@ -89,7 +90,7 @@ if __name__ == "__main__":
         
 
     else:
-        print("\nspecify\n    --inspect : to inspect a training data set, close a plot to open the next one. Actions are printed in the terminal\n    --merge': to merge /data/teach with all datasets in /data/teach_new \n    --inspect_path\n    --merge_path"  )
+        print("\nspecify\n    --inspect : to inspect a training data set, close a plot to open the next one. Actions are printed in the terminal\n    --merge': to merge /data/teacher with all datasets in /data/teach_new \n    --inspect_path\n    --merge_path"  )
 
 
 
