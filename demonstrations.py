@@ -56,12 +56,9 @@ def save_demonstrations(data_folder, actions, observations):
     observations:   python list of N numpy.ndarrays of size (96, 96, 3)
     actions:        python list of N numpy.ndarrays of size 3
     """
-    if not os.path.isdir("data"):
-        os.mkdir("data")
-    if not os.path.isdir("data/teacher_new"):
-        os.mkdir("data/teacher_new")
 
     # create new directory for this run
+    os.makedirs(data_folder, exist_ok=True)
     count = 1
     path = os.path.join(data_folder,str(count))
     creating_dir = True
@@ -76,7 +73,7 @@ def save_demonstrations(data_folder, actions, observations):
     for index, observation in enumerate(observations):
         np.save(path + "/observation_%05d.npy" % index, observation)
         np.save(path + "/action_%05d.npy" % index, actions[index])
-    print("run was saved")
+    print("run was saved in " + path)
 
 
 class ControlStatus:
