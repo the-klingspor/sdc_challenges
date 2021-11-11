@@ -1,4 +1,5 @@
 import torch
+from torchvision import transforms
 
 
 class ClassificationNetwork(torch.nn.Module):
@@ -13,25 +14,31 @@ class ClassificationNetwork(torch.nn.Module):
         # setting device on GPU if available, else CPU
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+        self.to_grayscale = transforms.Grayscale(num_output_channels=1)
+        self.augment = torch.nn.Sequential(
+            transforms.RandomAffine(degrees=20, translate=(0.1, 0.1)),
+            transforms.RandomErasing(scale=(0.02, 0.1)),
+        )
+
         self.cnn = torch.nn.Sequential(
-            torch.nn.Conv2d(3, 32, kernel_size=3, stride=2, padding=1),
+            torch.nn.Conv2d(1, 32, kernel_size=3, stride=2, padding=1),
             torch.nn.BatchNorm2d(32),
             torch.nn.LeakyReLU(negative_slope=0.2),
-            #torch.nn.Conv2d(32, 48, kernel_size=3, stride=2, padding=1),
-            #torch.nn.BatchNorm2d(48),
-            #torch.nn.LeakyReLU(negative_slope=0.2),
-            torch.nn.Conv2d(32, 64, kernel_size=3, stride=2, padding=1),
+            torch.nn.Conv2d(32, 48, kernel_size=3, stride=2, padding=1),
+            torch.nn.BatchNorm2d(48),
+            torch.nn.LeakyReLU(negative_slope=0.2),
+            torch.nn.Conv2d(48, 64, kernel_size=3, stride=2, padding=1),
             torch.nn.BatchNorm2d(64),
             torch.nn.LeakyReLU(negative_slope=0.2),
+            torch.nn.Flatten()
         )
         self.mlp = torch.nn.Sequential(
-            torch.nn.Linear(71, 128),  # nr_cnn_output feature maps + 7 sensor values
+            torch.nn.Linear(9223, 128),  # nr_cnn_output feature maps + 7 sensor values
             torch.nn.Dropout(p=0.3),
-            #torch.nn.LeakyReLU(negative_slope=0.2),
-            #torch.nn.Linear(128, 64),
-            #torch.nn.Dropout(p=0.3),
             torch.nn.LeakyReLU(negative_slope=0.2),
-            torch.nn.Linear(128, 2),
+            torch.nn.Linear(128, 64),
+            torch.nn.LeakyReLU(negative_slope=0.2),
+            torch.nn.Linear(64, 2, bias=False),
             torch.nn.Tanh()
         )
 
@@ -51,14 +58,14 @@ class ClassificationNetwork(torch.nn.Module):
         sensor_values = self.extract_sensor_values(observation, batch_size)
         sensor_values = torch.cat(sensor_values, dim=1)
 
-        x = observation/255.
-        x = x.permute(0, 3, 1, 2)
+        x = observation.permute(0, 3, 1, 2)
+        x = self.to_grayscale(x)
+        if self.training:
+            x = self.augment(x)
+        x = x / 255.
         x = self.cnn(x)
-        x = torch.mean(x, (2, 3))  # global average pooling
         x = torch.cat((x, sensor_values), dim=1)
         x = self.mlp(x)
-        x = x * torch.Tensor([1.1, 1.]).cuda()  # eliminate steering sensitivity
-        x = torch.clip(x, -1, 1)
         return x
 
     def actions_to_classes(self, actions):
@@ -91,9 +98,9 @@ class ClassificationNetwork(torch.nn.Module):
             reg_output[i][0] = a[0]
 
             # scale gas and braking to [-1, 1]
-            if a[2] > 0:
+            if a[2] > 0:  # braking
                 reg_output[i][1] = -1.
-            elif a[1] > 0:
+            elif a[1] > 0:  # gas
                 reg_output[i][1] = 1.
 
         """
