@@ -15,8 +15,6 @@ class ClassificationNetwork(torch.nn.Module):
         # setting device on GPU if available, else CPU
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                              std=[0.229, 0.224, 0.225])
         self.to_grayscale = transforms.Grayscale(num_output_channels=1)
 
         self.augment = torch.nn.Sequential(
@@ -49,7 +47,7 @@ class ClassificationNetwork(torch.nn.Module):
             torch.nn.Linear(128, 64),
             torch.nn.LeakyReLU(negative_slope=0.2),
             torch.nn.Linear(64, 4, bias=False),
-            torch.nn.Sigmoid()
+            torch.nn.Softmax()
         )
 
         if torch.cuda.is_available():
@@ -73,12 +71,41 @@ class ClassificationNetwork(torch.nn.Module):
             x = self.augment(x)
         x = self.to_grayscale(x)
         x = x / 255.
-        #x = self.normalize(x)
         x = self.cnn(x)
         x = torch.cat((x, sensor_values), dim=1).squeeze()
         x = self.mlp(x)
 
         return x
+
+    def actions_to_mini_classes(self, actions):
+        """
+        1.1 c)
+        For a given set of actions map every action to its corresponding
+        action-class representation. Every action is represented as one of five
+        classes:
+        0: Turn right
+        1: Turn left
+        2: Accelerate
+        3: Brake
+        4: Do nothing
+        actions:        python list of N torch.Tensors of size 3
+        return          python list of N torch.Tensors of size 1
+        """
+        classes = [torch.zeros(1, dtype=torch.uint8) for _ in actions]
+
+        for i, a in enumerate(actions):
+            # prioritize steering over acceleration - if both are non-zero, set
+            # steering class
+            if a[0] < 0:  # left
+                classes[i][0] = 0
+            elif a[0] > 0:  # right
+                classes[i][0] = 1
+            elif a[1] > 0:  # gas
+                classes[i][0] = 2
+            elif a[2] > 0:  # brake
+                classes[i][0] = 3
+            else:  # wait
+                classes[i][0] = 4
 
     def actions_to_multiclass(self, actions):
         """
@@ -136,32 +163,26 @@ class ClassificationNetwork(torch.nn.Module):
         Maps the scores predicted by the network to an action-class and returns
         the corresponding action [steer, gas, brake].
                         C = number of classes
-        scores:         python list of torch.Tensors of size 4
+        scores:         python list of torch.Tensors of size 1
         return          (float, float, float)
         """
         if scores.is_cuda:
             scores = scores.cpu()
         scores = scores.detach()
-        score = scores.squeeze()
-        right = score[0].item()
-        left = score[1].item()
-        gas = score[2].item()
-        brake = score[3].item()
+        class_pred = torch.argmax(scores.squeeze())
 
-        # Only retain max steering and max longitudinal movement
-        if right > left:
-            steering = right
-        elif left > right:
-            steering = -left
-        else:
-            steering = 0
+        steering, gas, brake = 0, 0, 0
 
-        if gas > brake:
-            brake = 0
-        elif brake > gas:
-            gas = 0
-        else:
-            gas, brake = 0, 0
+        if class_pred == 0:  # left
+            steering = -1.
+        elif class_pred == 1:  # right
+            steering = +1.
+        elif class_pred == 2:  # gas
+            gas = +0.5
+        elif class_pred == 3:  # brake
+            brake = +0.8
+        elif class_pred == 4:  # wait
+            pass
 
         return steering, gas, brake
 

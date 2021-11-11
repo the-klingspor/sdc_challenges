@@ -14,7 +14,7 @@ def train(data_folder, trained_network_file):
     infer_action = ClassificationNetwork()
     max_lr = 1e-3
     optimizer = torch.optim.Adam(infer_action.parameters(), lr=max_lr)
-    loss_function = nn.BCELoss()
+    loss_function = nn.CrossEntropyLoss()
 
     observations, actions = load_demonstrations(data_folder)
     observations = [torch.Tensor(observation) for observation in observations]
@@ -26,7 +26,7 @@ def train(data_folder, trained_network_file):
     # setting device on GPU if available, else CPU
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    nr_epochs = 200
+    nr_epochs = 2000
     batch_size = 64
     steps_per_epoch = len(batches) // batch_size
     start_time = time.time()
