@@ -56,6 +56,11 @@ def save_demonstrations(data_folder, actions, observations):
     observations:   python list of N numpy.ndarrays of size (96, 96, 3)
     actions:        python list of N numpy.ndarrays of size 3
     """
+    if not os.path.isdir("data"):
+        os.mkdir("data")
+    if not os.path.isdir("data/teacher_new"):
+        os.mkdir("data/teacher_new")
+
     # create new directory for this run
     count = 1
     path = os.path.join(data_folder,str(count))
