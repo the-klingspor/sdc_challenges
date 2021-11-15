@@ -8,6 +8,7 @@ from pyvirtualdisplay import Display
 
 from training import train
 from demonstrations import record_demonstrations
+from dagger import record_demonstrations_DAgger
 
 
 def evaluate(args, trained_network_file):
@@ -130,6 +131,16 @@ if __name__ == "__main__":
         "--cluster",
         action="store_true",
 	)
+    main_parser.add_argument(
+        "--teach_dagger",
+        action="store_true",
+    )
+    main_parser.add_argument(
+        "--beta",
+        type=float,
+        default=0.5,
+        help="beta sovereignty factor for dagger"
+    )
 
 
     args = main_parser.parse_args()
@@ -145,4 +156,7 @@ if __name__ == "__main__":
         evaluate(args, args.agent_load_path)
     elif args.score:
         calculate_score_for_leaderboard(args, args.agent_load_path)
+    elif args.teach_dagger:
+        print('Teach with dagger')
+        record_demonstrations_DAgger(args.training_data_path,args.beta,args.agent_load_path)
 

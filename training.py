@@ -3,6 +3,9 @@ import torch.nn as nn
 import random
 import time
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 from network import ClassificationNetwork
 from demonstrations import load_demonstrations
 
@@ -20,6 +23,18 @@ def train(data_folder, trained_network_file):
     observations = [torch.Tensor(observation) for observation in observations]
     actions = [torch.Tensor(action) for action in actions]
 
+    # validation=True
+    # validation_size_percentage = 10
+    # if validation:
+    #     rand.sample(range(1, len(observations)//validation_size_percentage), len(observations)//validation_size_percentage)
+    #     validation_observations = []
+    #     validation_actions = []
+    #     for i in range(len(observations)//validation_size_percentage):
+    #         index = random.randrange(len(observations) - i - 1)
+    #         validation_observations.append(observations.pop(index))
+    #         validation_actions.append(infer_action.actions_to_multiclass(actions.pop(index)))
+
+
     batches = [batch for batch in zip(observations,
                                       infer_action.actions_to_multiclass(actions))]
 
@@ -36,6 +51,9 @@ def train(data_folder, trained_network_file):
                                                     epochs=nr_epochs,
                                                     steps_per_epoch=steps_per_epoch)
     infer_action.train()
+
+    fig = plt.figure()
+    train_loss = []
 
     for epoch in range(nr_epochs):
         random.shuffle(batches)
@@ -65,6 +83,17 @@ def train(data_folder, trained_network_file):
                 batch_gt = []
 
                 scheduler.step()
+        
+        # v_total_loss = validation(infer_action,validation_observations,validation_actions)
+
+        # #Plot
+        # train_loss.append(total_loss)
+        # valid_loss.append(v_total_loss)
+        # fig.close()
+        # fig = plt.figure()
+        # plt.plot(train_loss,np.arrange(epoch))
+        # plt.plot(valid_loss,np.arrange(epoch))
+        # plt.show(blocking=False)
 
         time_per_epoch = (time.time() - start_time) / (epoch + 1)
         time_left = (1.0 * time_per_epoch) * (nr_epochs - 1 - epoch)
@@ -72,3 +101,15 @@ def train(data_folder, trained_network_file):
             epoch + 1, total_loss, time_left))
 
     torch.save(infer_action, trained_network_file)
+
+def validation(infer_action,validation_observations,validation_actions):
+    total_loss = 0
+    infer_action.eval()
+    for i in range(len(validation_observations)):
+        action_scores = infer_action.scores_to_action(infer_action(torch.Tensor(
+                np.ascontiguousarray(validation_observations[None])).to(device)))
+        loss = loss_function(batch_out, batch_gt)
+
+
+#observation = np.load("/home/lenny/Uni/SDC/ex_01_imitation_learning/sdc_challenges/data/teacher/observation_1.npy")
+#is_critical_state(observation)

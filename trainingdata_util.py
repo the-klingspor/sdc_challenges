@@ -27,10 +27,17 @@ if __name__ == "__main__":
         help="specify the path to the folder with the training data set to be inspected"
     )
     main_parser.add_argument(
-        "--merge_path",
+        "--merge_base_path",
         action="store",
         type=str,
-        default="data",
+        default="data/teacher",
+        
+    )
+    main_parser.add_argument(
+        "--merge_save_path",
+        action="store",
+        type=str,
+        default="data/teacher_new",
         
     )
     main_parser.add_argument(
@@ -53,15 +60,10 @@ if __name__ == "__main__":
             plt.show()
     elif args.merge:
         # path error handling
-        if(args.merge_path == "data" and not os.path.isdir("data")):
-            print("default path 'data' was chosen but no directory data was found")
-            exit()
-        teacher_folder = os.path.join(args.merge_path,"teacher")
-        teacher_new_folder = os.path.join(args.merge_path,"teacher_new")
-        if not os.path.isdir(teacher_folder):
+        if not os.path.isdir(args.merge_base_path):
             print("no teacher folder found in specified path")
             exit()
-        if not os.path.isdir(teacher_new_folder):
+        if not os.path.isdir(args.merge_save_path):
             print("no teacher_new folder found in specified path")
             exit()
         os.makedirs(args.merge_Folder, exist_ok=True) 
@@ -74,16 +76,16 @@ if __name__ == "__main__":
             print("please copy the content of teaching over to teaching_merged manually :D")
         else:
             cp = 'cp '
-            os.popen('cp -a ' + teacher_folder + '/. ' + args.merge_Folder)
+            os.popen('cp -a ' + args.merge_base_path + '/. ' + args.merge_Folder)
         
-        count = len([f for f in os.listdir(teacher_folder) if f.startswith("observation")])
+        count = len([f for f in os.listdir(args.merge_base_path) if f.startswith("observation")])
 
-        for dir_number in os.listdir(teacher_new_folder):
+        for dir_number in os.listdir(args.merge_save_path):
             highes_number = 0
-            for new_teaching in os.listdir(os.path.join(teacher_new_folder,dir_number)):
+            for new_teaching in os.listdir(os.path.join(args.merge_save_path,dir_number)):
                 number = int(re.search('\d+',new_teaching).group())
                 if number > highes_number: highes_number = number
-                source = os.path.join(teacher_new_folder,dir_number,new_teaching)
+                source = os.path.join(args.merge_save_path,dir_number,new_teaching)
                 destination = os.path.join(args.merge_Folder,re.sub('\d+',str(count + number),new_teaching))
                 os.popen(cp + source + ' ' + destination) 
             count +=  highes_number + 1
