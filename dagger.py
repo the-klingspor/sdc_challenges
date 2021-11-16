@@ -52,7 +52,7 @@ class ControlStatus:
         if k == key.DOWN: self.brake = 0.0
 
 
-def record_demonstrations_DAgger(demonstrations_folder,beta,trained_network_file):
+def record_demonstrations_DAgger(demonstrations_folder,beta,trained_network_file,only_critical):
     """
     Dagger-like-Function to record own demonstrations by driving the car with network support in the gym car-racing
     environment.
@@ -69,7 +69,8 @@ def record_demonstrations_DAgger(demonstrations_folder,beta,trained_network_file
     R:                  Reload the exact same track
     C:                  continue past the 600 frame limit
     """
-    
+    print("press TAB to save, SPACE to restart, or ESC to stop")
+    print(only_critical)
     infer_action = torch.load(trained_network_file)
     infer_action.eval()
         # setting device on GPU if available, else CPU
@@ -118,12 +119,16 @@ def record_demonstrations_DAgger(demonstrations_folder,beta,trained_network_file
 
             if frames > 650:
                 print("score: ",score)
-                print("press TAB to save, SPACE to restart, or ESC to stop")
                 status.blocking = True
         env.render()
         if status.save:
             env.close()
-            save_demonstrations(demonstrations_folder, actions, observations)
+            if only_critical:
+                [reduced_observations,reduced_actions] = reduce_to_critical_Curves(observations,actions)
+                save_demonstrations(demonstrations_folder, reduced_actions, reduced_observations)
+                print("only critical data saved")
+            else:
+                save_demonstrations(demonstrations_folder, actions, observations)
             observations = []
             actions = []
             # get an observation from the environment
@@ -175,3 +180,48 @@ def record_demonstrations_DAgger(demonstrations_folder,beta,trained_network_file
         if status.quit:
             env.close()
 
+def reduce_to_critical_Curves(observations,actions):
+    """
+    deletes all oberservations which don't have the red curve markings below the y_top_threshold
+    """
+    y_top_threshold = 60 #pixel
+
+    observations = np.array(observations)
+    delete = []
+    for i in range(observations.shape[0]):
+        if(np.amax(observations[i,y_top_threshold:83,:,0]) != 255):
+            delete.append(i)
+    reduced_observations = np.delete(observations,delete,axis=0)
+    reduced_actions = np.delete(actions,delete,axis=0)
+    return [reduced_observations,reduced_actions]
+
+def inspect_observation_with_values(observations):
+    import matplotlib.cm as cm
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.imshow(observations)
+    print("max red value: ",np.amax(observations[40:83,:,0]))
+    numrows = observations.shape[0]
+    numcols = observations.shape[1]
+    def format_coord(x, y):
+        col = int(x+0.5)
+        row = int(y+0.5)
+        if col>=0 and col<numcols and row>=0 and row<numrows:
+            z = observations[row,col]
+            return 'x=%1.4f, y=%1.4f, rot=%3d, gruen=%3d, blau=%3d'%(x, y, z[0], z[1], z[2])
+        else:
+            return 'x=%1.4f, y=%1.4f'%(x, y)
+    ax.format_coord = format_coord
+    plt.show()
+
+
+## inspect a picture with the r,g,b values
+#inspect_observation_with_values(np.load(r"/home/lenny/Uni/SDC/ex_01_imitation_learning/sdc_challenges/data/teacher/observation_11.npy"))
+
+## showcase the removal of non critical data in the teacher dataset
+# from demonstrations import load_demonstrations 
+# from demonstrations import save_demonstrations 
+# [observations,actions] = load_demonstrations(r"/home/lenny/Uni/SDC/ex_01_imitation_learning/sdc_challenges/data/teacher")
+# [reduced_observations,reduced_actions] = reduce_to_critical_Curves(observations,actions)
+# save_demonstrations(r"/home/lenny/Uni/SDC/ex_01_imitation_learning/sdc_challenges/data/teacher_critical", reduced_actions, reduced_observations)

@@ -136,6 +136,10 @@ if __name__ == "__main__":
         action="store_true",
     )
     main_parser.add_argument(
+        "--only_critical",
+        action="store_true",
+    )
+    main_parser.add_argument(
         "--beta",
         type=float,
         default=0.5,
@@ -158,5 +162,5 @@ if __name__ == "__main__":
         calculate_score_for_leaderboard(args, args.agent_load_path)
     elif args.teach_dagger:
         print('Teach with dagger')
-        record_demonstrations_DAgger(args.training_data_path,args.beta,args.agent_load_path)
+        record_demonstrations_DAgger(args.training_data_path,args.beta,args.agent_load_path,args.only_critical)
 
