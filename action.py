@@ -40,7 +40,13 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
         ID of selected action
     """
 
-    # TODO: Select exploratory action
+    x = policy_net(state)
+
+    if(exploration >= random.uniform(0, 1)):
+        return random.randrange(action_size)
+    else:
+        
+        return 1#np.amax(actions = )
 
 class ActionSet:
     
