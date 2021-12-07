@@ -36,7 +36,7 @@ def main ():
     parser.add_argument ( '--total_timesteps', type=int, default=100000, help = 'The number of env steps to take' )
     parser.add_argument ( '--action_repeats', type=int, default=4, help='Update the model every action_repeatss steps' )
     parser.add_argument ( '--gamma', type=float, default=0.99, help='selection action on every n-th frame and repeat action for intermediate frames' )
-    parser.add_argument ( '--action_filename', type=str, default = 'default_actions.txt', help='a list of actions' )
+    parser.add_argument ( '--action_filename', type=str, default = 'five_actions.txt', help='a list of actions' )
     parser.add_argument ( '--use_doubleqlearning', default=False, action="store_true", help='a flag that indicates the use of double q learning' )
     parser.add_argument ( '--display', default=False, action="store_true", help='a flag indicating whether training runs in the cluster' )
     parser.add_argument ( '--agent_name', type=str, default='agent', help='an agent name' )
