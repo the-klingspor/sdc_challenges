@@ -18,7 +18,11 @@ def select_greedy_action(state, policy_net, action_size):
         ID of selected action
     """
 
-    # TODO: Select greedy action
+    state = torch.tensor(state)
+    if torch.cuda.is_available():
+            state = state.cuda()
+    x = policy_net(state)
+    return int(torch.argmax(x))
 
 def select_exploratory_action(state, policy_net, action_size, exploration, t):
     """ Select an action according to an epsilon-greedy exploration strategy
@@ -40,16 +44,14 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
         ID of selected action
     """
 
-    state = torch.tensor(state)
-    if torch.cuda.is_available():
-            state = state.cuda()
-    x = policy_net(state)
-
     if(exploration.value(t) >= random.uniform(0, 1)):
         return random.randrange(action_size)
     else:
-        
-        return 1#np.amax(actions = )
+        state = torch.tensor(state)
+        if torch.cuda.is_available():
+                state = state.cuda()
+        x = policy_net(state)
+        return int(torch.argmax(x))
 
 class ActionSet:
     
