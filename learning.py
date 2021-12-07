@@ -26,19 +26,30 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     float
         loss value for current learning step
     """
+ 
+    # 1. Sample transitions from replay_buffer
+    transitions = replay_buffer.sample(batch_size)
 
-    # TODO: Run single Q-learning step
-    """ Steps: 
-        1. Sample transitions from replay_buffer
-        2. Compute Q(s_t, a)
-        3. Compute \max_a Q(s_{t+1}, a) for all next states.
-        4. Mask next state values where episodes have terminated
-        5. Compute the target
-        6. Compute the loss
-        7. Calculate the gradients
-        8. Clip the gradients
-        9. Optimize the model
-    """
+    # 2. Compute Q(s_t, a)
+    prediction = policy_net(transitions)
+    
+    # 3. Compute \max_a Q(s_{t+1}, a) for all next states.
+    MaxQ = max(target_net())
+    # 4. Mask next state values where episodes have terminated
+
+
+    # 5. Compute the target
+    target = reward + gamma*MaxQ
+
+    # 6. Compute the loss
+    Loss = (target - prediction)**2
+
+    # 7. Calculate the gradients
+    stochastic gradient descent
+
+    # 8. Clip the gradients
+
+    # 9. Optimize the model
 
     # Tip: You can use use_doubleqlearning to switch the learning modality.
 
@@ -53,3 +64,4 @@ def update_target_net(policy_net, target_net):
     """
 
     # TODO: Update target network
+    target_net.load_state_dict(policy_net.state_dict())

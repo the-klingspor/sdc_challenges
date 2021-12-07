@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
+from torchvision import transforms
 
 
 class DQN(nn.Module):
@@ -17,8 +19,25 @@ class DQN(nn.Module):
 
         self.device = device 
         self.action_size = action_size
+        self.regularization = 1e-6
+        self.to_grayscale = transforms.Grayscale(num_output_channels=1)
 
-        # TODO: Create network
+        #architecture: 
+        self.nn = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 8, kernel_size=7, stride=4, padding=0),  # output: 23x23x8, kernelsize 8? with 7 you drop one column, but who cares right, nothing of interest at the boarder?
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2, stride=2,padding=1),                  # output: 12x12x8
+            torch.nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=0), # output: 10x10x16
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2, stride=2),                            # output: 5x5x16
+            torch.nn.Flatten(),
+            torch.nn.Linear(400, 400),
+            torch.nn.ReLU(),
+            torch.nn.Linear(400, 5)
+        )
+
+        if torch.cuda.is_available():
+            self.nn = self.nn.cuda()
 
     def forward(self, observation):
         """ Forward pass to compute Q-values
@@ -31,8 +50,9 @@ class DQN(nn.Module):
         torch.Tensor
             Q-values  
         """
-
-        # TODO: Forward pass through the network
+        x = self.preprocess(observation)
+        x = self.nn(x)
+        return x
 
     def extract_sensor_values(self, observation, batch_size):
         """ Extract numeric sensor values from state pixels
@@ -60,3 +80,17 @@ class DQN(nn.Module):
         gyroscope = (gyro_crop== 255).sum(dim=1, keepdim=True)
         
         return speed, abs_sensors.reshape(batch_size, 4), steering, gyroscope
+
+    def preprocess(self, observation):
+        observation = observation.astype(np.uint8)
+        observation_gray = self.to_grayscale(observation)
+        # observation_gray[abs(observation_gray - 0.60116) < 0.1] = 1
+        observation_gray[84:95,0:12] = 0
+        observation_gray[abs(observation_gray - 0.68616) < 0.0001] = 1
+        observation_gray[abs(observation_gray - 0.75630) < 0.0001] = 1
+        #uncomment to see pre processed image
+        # plt.imshow(observation_gray, cmap='gray')
+        # plt.show()
+
+        #Set values between -1 and 1 for input normalization
+        return 2 * observation_gray - 1
