@@ -50,7 +50,8 @@ class DQN(nn.Module):
         torch.Tensor
             Q-values  
         """
-        x = self.preprocess(observation)
+        x = observation.permute(0, 3, 1, 2)
+        x = self.preprocess(x)
         x = self.nn(x)
         return x
 

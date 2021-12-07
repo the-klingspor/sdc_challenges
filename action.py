@@ -40,9 +40,9 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
         ID of selected action
     """
 
-    x = policy_net(state)
+    x = policy_net(torch.tensor(state))
 
-    if(exploration >= random.uniform(0, 1)):
+    if(exploration.value(t) >= random.uniform(0, 1)):
         return random.randrange(action_size)
     else:
         
