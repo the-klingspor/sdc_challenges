@@ -47,7 +47,6 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
 
     # 6. Compute the loss
     Loss = (target - prediction)**2
-    print(Loss)
 
     # 7. Calculate the gradients
     #stochastic gradient descent
@@ -57,6 +56,8 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     # 9. Optimize the model
 
     # Tip: You can use use_doubleqlearning to switch the learning modality.
+
+    return Loss
 
 def update_target_net(policy_net, target_net):
     """ Update the target network
