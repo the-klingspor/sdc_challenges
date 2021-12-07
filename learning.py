@@ -31,7 +31,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     [obs_batch, act_batch, rew_batch, next_obs_batch, done_mask] = replay_buffer.sample(batch_size)
     obs_batch = torch.tensor(obs_batch)
     if torch.cuda.is_available():
-            obs_batch.cuda()
+            obs_batch = obs_batch.cuda()
 
     # 2. Compute Q(s_t, a)
     prediction = policy_net(obs_batch)[np.arange(batch_size),act_batch]

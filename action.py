@@ -42,7 +42,7 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
 
     state = torch.tensor(state)
     if torch.cuda.is_available():
-            state.cuda()
+            state = state.cuda()
     x = policy_net(state)
 
     if(exploration.value(t) >= random.uniform(0, 1)):
