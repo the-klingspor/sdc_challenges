@@ -91,8 +91,8 @@ class DQN(nn.Module):
         observation_gray[abs(observation_gray - 0.68616) < 0.0001] = 1
         observation_gray[abs(observation_gray - 0.75630) < 0.0001] = 1
         #uncomment to see pre processed image
-        plt.imshow(observation_gray, cmap='gray')
-        plt.show()
+        #plt.imshow(observation_gray[0,0,:,:], cmap='gray')
+        #plt.show()
 
         #Set values between -1 and 1 for input normalization
         return 2 * observation_gray - 1
