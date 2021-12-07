@@ -179,7 +179,7 @@ def learn(env,
                 break
 
             # you can comment out this.
-            env.render()
+            #env.render()
             
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
