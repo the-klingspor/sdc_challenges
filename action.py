@@ -21,7 +21,8 @@ def select_greedy_action(state, policy_net, action_size):
     state = torch.tensor(state)
     if torch.cuda.is_available():
             state = state.cuda()
-    x = policy_net(state)
+    with torch.no_grad():
+        x = policy_net(state)
     return int(torch.argmax(x))
 
 def select_exploratory_action(state, policy_net, action_size, exploration, t):
@@ -50,7 +51,8 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
         state = torch.tensor(state)
         if torch.cuda.is_available():
                 state = state.cuda()
-        x = policy_net(state)
+        with torch.no_grad():        
+            x = policy_net(state)
         return int(torch.argmax(x))
 
 class ActionSet:
