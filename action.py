@@ -40,7 +40,10 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
         ID of selected action
     """
 
-    x = policy_net(torch.tensor(state))
+    state = torch.tensor(state)
+    if torch.cuda.is_available():
+            state.cuda()
+    x = policy_net(state)
 
     if(exploration.value(t) >= random.uniform(0, 1)):
         return random.randrange(action_size)
