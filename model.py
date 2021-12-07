@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 from torchvision import transforms
+import matplotlib.pyplot as plt
 
 
 class DQN(nn.Module):
@@ -83,15 +84,15 @@ class DQN(nn.Module):
         return speed, abs_sensors.reshape(batch_size, 4), steering, gyroscope
 
     def preprocess(self, observation):
-        observation = observation.astype(np.uint8)
+        #observation = observation.astype(np.uint8)
         observation_gray = self.to_grayscale(observation)
         # observation_gray[abs(observation_gray - 0.60116) < 0.1] = 1
-        observation_gray[84:95,0:12] = 0
+        observation_gray[:,:,84:95,0:12] = 0
         observation_gray[abs(observation_gray - 0.68616) < 0.0001] = 1
         observation_gray[abs(observation_gray - 0.75630) < 0.0001] = 1
         #uncomment to see pre processed image
-        # plt.imshow(observation_gray, cmap='gray')
-        # plt.show()
+        plt.imshow(observation_gray, cmap='gray')
+        plt.show()
 
         #Set values between -1 and 1 for input normalization
         return 2 * observation_gray - 1
