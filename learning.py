@@ -37,7 +37,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     prediction = policy_net(obs_batch)[np.arange(batch_size),act_batch]
     
     # 3. Compute \max_a Q(s_{t+1}, a) for all next states.
-    MaxQ = torch.max(target_net(obs_batch),axis=1)
+    MaxQ = torch.amax(target_net(obs_batch),1)
 
     # 4. Mask next state values where episodes have terminated
 
