@@ -70,10 +70,11 @@ def evaluate(env, new_actions = None, load_path='agent.t7'):
     print(' std score: %f' % np.std(np.array(episode_rewards)))
     print('---------------------------')
 
+
 def learn(env,
           lr=1e-4,
-          total_timesteps = 100000,
-          buffer_size = 100000,
+          total_timesteps=100000,
+          buffer_size=100000,
           exploration_fraction=0.1,
           exploration_final_eps=0.05,
           train_freq=3,
@@ -82,10 +83,10 @@ def learn(env,
           learning_starts=1000,
           gamma=0.95,
           target_network_update_freq=1000,
-          new_actions = None,
+          new_actions=None,
           model_identifier='agent',
-          outdir = "",
-          use_doubleqlearning = False):
+          outdir="",
+          use_doubleqlearning=False):
     """ Train a deep q-learning model.
     Parameters
     -------
@@ -137,7 +138,7 @@ def learn(env,
     actions = action_manager.get_action_set()
 
     action_size = len(actions)
-    print ( action_size )
+    print(action_size)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Build networks
@@ -149,8 +150,11 @@ def learn(env,
     # Create replay buffer
     replay_buffer = ReplayBuffer(buffer_size)
 
-    # Create optimizer
+    # Create optimizer with lr schedule
     optimizer = optim.Adam(policy_net.parameters(), lr=lr)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
+                                                    max_lr=lr,
+                                                    total_steps=total_timesteps)
 
     # Create the schedule for exploration starting from 1.
     exploration = LinearSchedule(schedule_timesteps=int(exploration_fraction * total_timesteps),
@@ -180,7 +184,10 @@ def learn(env,
 
             # you can comment out this.
             #env.render()
-            
+
+        # update lr
+        scheduler.step()
+
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
         replay_buffer.add(obs, action_id, rew, new_obs, float(done))

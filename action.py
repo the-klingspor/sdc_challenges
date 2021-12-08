@@ -20,7 +20,7 @@ def select_greedy_action(state, policy_net, action_set):
     """
     state = torch.tensor(state)
     if torch.cuda.is_available():
-            state = state.cuda()
+        state = state.cuda()
     with torch.no_grad():
         x = policy_net(state)
     return int(torch.argmax(x))
@@ -47,6 +47,7 @@ def select_exploratory_action(state, policy_net, action_set, exploration, t):
     """
     action_size = len(action_set.actions)
     if exploration.value(t) >= random.uniform(0, 1):
+        # over selection of gas actions
         gas_actions = np.array([a[1] == 1 and a[2] == 0 for a in action_set.actions])
         action_weights = 14.0 * gas_actions + 1.0
         action_weights /= np.sum(action_weights)
@@ -57,16 +58,16 @@ def select_exploratory_action(state, policy_net, action_set, exploration, t):
 
 class ActionSet:
     
-    def __init__( self ):
+    def __init__(self):
         """ Initialize actions
         """
         self.actions = [[-1.0, 0.05, 0], [1.0, 0.05, 0], [0, 0.5, 0], [0, 0, 1.0]]
 
-    def set_actions (self, new_actions):
+    def set_actions(self, new_actions):
         """ Set the list of available actions
         Parameters
         ------
-        list
+        new_actions: list
             list of available actions
         """
         self.actions = new_actions
