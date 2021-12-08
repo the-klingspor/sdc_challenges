@@ -1,8 +1,9 @@
 import random
 import torch
+import numpy as np
 
 
-def select_greedy_action(state, policy_net, action_size):
+def select_greedy_action(state, policy_net, action_set):
     """ Select the greedy action
     Parameters
     -------
@@ -10,14 +11,13 @@ def select_greedy_action(state, policy_net, action_size):
         state of the environment
     policy_net: torch.nn.Module
         policy network
-    action_size: int
-        number of possible actions
+    action_set: ActionSet
+        Set class containing valid actions
     Returns
     -------
     int
         ID of selected action
     """
-
     state = torch.tensor(state)
     if torch.cuda.is_available():
             state = state.cuda()
@@ -25,7 +25,8 @@ def select_greedy_action(state, policy_net, action_size):
         x = policy_net(state)
     return int(torch.argmax(x))
 
-def select_exploratory_action(state, policy_net, action_size, exploration, t):
+
+def select_exploratory_action(state, policy_net, action_set, exploration, t):
     """ Select an action according to an epsilon-greedy exploration strategy
     Parameters
     -------
@@ -33,8 +34,8 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
         state of the environment
     policy_net: torch.nn.Module
         policy network
-    action_size: int
-        number of possible actions
+    action_set: ActionSet
+        Set class containing valid actions
     exploration: LinearSchedule
         linear exploration schedule
     t: int
@@ -44,16 +45,15 @@ def select_exploratory_action(state, policy_net, action_size, exploration, t):
     int
         ID of selected action
     """
-
-    if(exploration.value(t) >= random.uniform(0, 1)):
-        return random.randrange(action_size)
+    action_size = len(action_set.actions)
+    if exploration.value(t) >= random.uniform(0, 1):
+        gas_actions = np.array([a[1] == 1 and a[2] == 0 for a in action_set.actions])
+        action_weights = 14.0 * gas_actions + 1.0
+        action_weights /= np.sum(action_weights)
+        return np.random.choice(action_size, p=action_weights)
     else:
-        state = torch.tensor(state)
-        if torch.cuda.is_available():
-                state = state.cuda()
-        with torch.no_grad():        
-            x = policy_net(state)
-        return int(torch.argmax(x))
+        return select_greedy_action(state, policy_net, action_set)
+
 
 class ActionSet:
     
