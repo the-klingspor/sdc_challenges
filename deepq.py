@@ -6,7 +6,7 @@ from learning import perform_qlearning_step, update_target_net
 from model import DQN
 from replay_buffer import ReplayBuffer
 from schedule import LinearSchedule
-from utils import get_state, visualize_training
+from utils import get_state, visualize_training, ModelEMA
 import os
 import matplotlib
 import time
@@ -86,7 +86,8 @@ def learn(env,
           new_actions=None,
           model_identifier='agent',
           outdir="",
-          use_doubleqlearning=False):
+          use_doubleqlearning=False,
+          use_ema=False):
     """ Train a deep q-learning model.
     Parameters
     -------
@@ -116,10 +117,12 @@ def learn(env,
         update the target network every `target_network_update_freq` steps.
     model_identifier: string
         identifier of the agent
+    use_ema: bool
+        Whether to use an exponential moving average
     """
 
     # set float as default
-    torch.set_default_dtype (torch.float32)
+    torch.set_default_dtype(torch.float32)
     
     if torch.cuda.is_available():
         print("\nUsing CUDA.")
@@ -132,7 +135,7 @@ def learn(env,
     action_manager = ActionSet()
 
     if new_actions is not None:
-        print ( "Set new actions")
+        print("Set new actions")
         action_manager.set_actions(new_actions)
 
     actions = action_manager.get_action_set()
@@ -143,9 +146,13 @@ def learn(env,
 
     # Build networks
     policy_net = DQN(action_size, device).to(device)
-    target_net = DQN(action_size, device).to(device)
-    target_net.load_state_dict(policy_net.state_dict())
-    target_net.eval()
+    if use_ema:
+        target_net = ModelEMA(policy_net)
+        target_net.updates = total_timesteps
+    else:
+        target_net = DQN(action_size, device).to(device)
+        target_net.load_state_dict(policy_net.state_dict())
+        target_net.eval()
 
     # Create replay buffer
     replay_buffer = ReplayBuffer(buffer_size)
@@ -170,10 +177,10 @@ def learn(env,
     for t in range(total_timesteps):
 
         # Select action
-        action_id = select_exploratory_action(obs, policy_net, action_size, exploration, t)
+        action_id = select_exploratory_action(obs, policy_net, actions, exploration, t)
         env_action = actions[action_id]
 
-        policy_net.extract_sensor_values (torch.from_numpy(obs),1)
+        policy_net.extract_sensor_values(torch.from_numpy(obs), 1)
 
         # Perform action fram_skip-times
         for f in range(action_repeat):
@@ -204,9 +211,12 @@ def learn(env,
             loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning)
             training_losses.append(loss)
 
-        if t > learning_starts and t % target_network_update_freq == 0:
-            # Update target netwofsrk periodically.
-            update_target_net(policy_net, target_net)
+        if not t > learning_starts:
+            if use_ema:
+                target_net.update(policy_net)
+            elif t % target_network_update_freq == 0:
+                # Update target network periodically.
+                update_target_net(policy_net, target_net)
 
         if t % 1000 == 0:
             end = time.time()

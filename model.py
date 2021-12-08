@@ -23,9 +23,9 @@ class DQN(nn.Module):
         self.regularization = 1e-6
         self.to_grayscale = transforms.Grayscale(num_output_channels=1)
 
-        #architecture: 
+        # architecture:
         self.nn = torch.nn.Sequential(
-            torch.nn.Conv2d(1, 8, kernel_size=7, stride=4, padding=0),  # output: 23x23x8, kernelsize 8? with 7 you drop one column, but who cares right, nothing of interest at the boarder?
+            torch.nn.Conv2d(1, 8, kernel_size=7, stride=4, padding=0),  # output: 23x23x8, kernelsize 8? with 7 you drop one column, but who cares right, nothing of interest at the border?
             torch.nn.ReLU(),
             torch.nn.MaxPool2d(2, stride=2,padding=1),                  # output: 12x12x8
             torch.nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=0), # output: 10x10x16
@@ -73,13 +73,13 @@ class DQN(nn.Module):
             Extracted numerical values
         """
         speed_crop = observation[:, 84:94, 13, 0].reshape(batch_size, -1)
-        speed = (speed_crop== 255).sum(dim=1, keepdim=True) 
+        speed = (speed_crop == 255).sum(dim=1, keepdim=True)
         abs_crop = observation[:, 84:94, 18:25:2, 2].reshape(batch_size, 10, 4)
-        abs_sensors = (abs_crop== 255).sum(dim=1) 
+        abs_sensors = (abs_crop == 255).sum(dim=1)
         steer_crop = observation[:, 88, 38:58, 1].reshape(batch_size, -1)
-        steering = (steer_crop== 255).sum(dim=1, keepdim=True)
+        steering = (steer_crop == 255).sum(dim=1, keepdim=True)
         gyro_crop = observation[:, 88, 58:86, 0].reshape(batch_size, -1)
-        gyroscope = (gyro_crop== 255).sum(dim=1, keepdim=True)
+        gyroscope = (gyro_crop == 255).sum(dim=1, keepdim=True)
         
         return speed, abs_sensors.reshape(batch_size, 4), steering, gyroscope
 

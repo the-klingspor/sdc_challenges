@@ -20,21 +20,22 @@ def load_actions ( action_filename ):
 
     return actions
 
+
 def main():
 
     """ 
     Evaluate a trained Deep Q-Learning agent 
     """ 
 
-    print ("python version:\t{0}".format (platform.python_version()))
-    print ("gym version:\t{0}".format(gym.__version__))
+    print("python version:\t{0}".format(platform.python_version()))
+    print("gym version:\t{0}".format(gym.__version__))
     
     # get args
     parser = argparse.ArgumentParser()
 
-    parser.add_argument ( '--action_filename', type=str, default = 'default_actions.txt', help='a list of actions' )
-    parser.add_argument ( '--cluster', default=False, action="store_true", help='a flag indicating whether training runs in the cluster' )
-    parser.add_argument ( '--agent_name', type=str, default='agent')
+    parser.add_argument('--action_filename', type=str, default='default_actions.txt', help='a list of actions' )
+    parser.add_argument('--cluster', default=False, action="store_true", help='a flag indicating whether training runs in the cluster' )
+    parser.add_argument('--agent_name', type=str, default='agent')
 
     args = parser.parse_args()
 
@@ -44,12 +45,12 @@ def main():
 
     # load actions
     actions = load_actions ( args.action_filename ) 
-    print ( "actions:\t\t", actions )
+    print("actions:\t\t", actions )
 
     filename = args.agent_name +'.t7'
-    print("loading {0}".format( filename ) )
+    print("loading {0}".format(filename))
     env = gym.make("CarRacing-v0")
-    deepq.evaluate(env, new_actions = actions, load_path = filename )
+    deepq.evaluate(env, new_actions=actions, load_path=filename)
 
     env.close()
     if args.cluster:

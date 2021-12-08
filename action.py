@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 
-def select_greedy_action(state, policy_net, action_set):
+def select_greedy_action(state, policy_net, actions):
     """ Select the greedy action
     Parameters
     -------
@@ -11,8 +11,8 @@ def select_greedy_action(state, policy_net, action_set):
         state of the environment
     policy_net: torch.nn.Module
         policy network
-    action_set: ActionSet
-        Set class containing valid actions
+    actions: list
+        list of all valid actions
     Returns
     -------
     int
@@ -26,7 +26,7 @@ def select_greedy_action(state, policy_net, action_set):
     return int(torch.argmax(x))
 
 
-def select_exploratory_action(state, policy_net, action_set, exploration, t):
+def select_exploratory_action(state, policy_net, actions, exploration, t):
     """ Select an action according to an epsilon-greedy exploration strategy
     Parameters
     -------
@@ -34,26 +34,26 @@ def select_exploratory_action(state, policy_net, action_set, exploration, t):
         state of the environment
     policy_net: torch.nn.Module
         policy network
-    action_set: ActionSet
-        Set class containing valid actions
-    exploration: LinearSchedule
+    actions: list
+        list of all valid actions
+    exploration: linearschedule
         linear exploration schedule
     t: int
         current time-step
-    Returns
+    returns
     -------
     int
-        ID of selected action
+        id of selected action
     """
-    action_size = len(action_set.actions)
+    action_size = len(actions)
     if exploration.value(t) >= random.uniform(0, 1):
         # over selection of gas actions
-        gas_actions = np.array([a[1] == 1 and a[2] == 0 for a in action_set.actions])
+        gas_actions = np.array([a[1] == 1 and a[2] == 0 for a in actions])
         action_weights = 14.0 * gas_actions + 1.0
         action_weights /= np.sum(action_weights)
         return np.random.choice(action_size, p=action_weights)
     else:
-        return select_greedy_action(state, policy_net, action_set)
+        return select_greedy_action(state, policy_net, actions)
 
 
 class ActionSet:

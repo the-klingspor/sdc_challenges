@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
-def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning = False):
+def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning=False, use_ema):
     """ Perform a deep Q-learning step
     Parameters
     -------
@@ -21,6 +21,8 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
         discount factor used in Q-learning update
     device: torch.device
         device on which to the models are allocated
+    use_ema: bool
+        whether an exponential moving average is used as target network
     Returns
     -------
     float
@@ -41,7 +43,11 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     
     # 3. Compute \max_a Q(s_{t+1}, a) for all next states.
     with torch.no_grad():
-        MaxQ = torch.amax(target_net(obs_batch),1)
+        if use_ema:
+            q_values = target_net.ema(obs_batch)
+        else:
+            q_values = target_net(obs_batch)
+        MaxQ = torch.amax(q_values,1)
 
     # 4. Mask next state values where episodes have terminated
 
@@ -62,6 +68,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     # Tip: You can use use_doubleqlearning to switch the learning modality.
 
     return Loss
+
 
 def update_target_net(policy_net, target_net):
     """ Update the target network
