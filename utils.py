@@ -35,6 +35,45 @@ def visualize_training(episode_rewards, training_losses, model_identifier, ourdi
     plt.close()
 
 
+def check_early_stop(rew, n_neg_rewards, frames_in_episode,
+                     max_neg_rewards=100):
+    """ Check if the episode should be stopped early because of poor performance.
+
+    Parameters:
+    -------
+    rew: float
+        This frames's reward.
+    n_neg_rewards: int
+        Number of consecutive frames with negative reward.
+    frames_in_episode: int
+        Number of frames of this episode seen so far
+    max_neg_rewards: int
+
+    Returns
+    -------
+    early_done: bool
+        Whether to stop the episode early because of poor results
+    n_neg_rewards: int
+        Number of consecutive frames with negative reward.
+    """
+    early_done = False
+    # increase counter and check for early stop, if negative reward
+    if frames_in_episode > 10 and rew < 0:
+        n_neg_rewards += 1
+
+        if n_neg_rewards > max_neg_rewards:
+            early_done = True
+            n_neg_rewards = 0
+        else:
+            early_done = False
+
+    # reset counter if positive reward
+    else:
+        n_neg_rewards = 0
+
+    return early_done, n_neg_rewards
+
+
 class ModelEMA:
     """ Model Exponential Moving Average from https://github.com/rwightman/pytorch-image-models
     Keep a moving average of everything in the model state_dict (parameters and buffers).

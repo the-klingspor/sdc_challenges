@@ -6,7 +6,7 @@ from learning import perform_qlearning_step, update_target_net
 from model import DQN
 from replay_buffer import ReplayBuffer
 from schedule import LinearSchedule
-from utils import get_state, visualize_training, ModelEMA
+from utils import get_state, visualize_training, ModelEMA, check_early_stop
 import os
 import matplotlib
 import time
@@ -127,9 +127,9 @@ def learn(env,
     
     if torch.cuda.is_available():
         print("\nUsing CUDA.")
-        print (torch.version.cuda,"\n")
+        print(torch.version.cuda,"\n")
     else:
-        print ("\nNot using CUDA.\n")
+        print("\nNot using CUDA.\n")
 
     episode_rewards = [0.0]
     training_losses = []
@@ -174,6 +174,7 @@ def learn(env,
 
     start = time.time()
     frames_in_episode = 0
+    n_neg_rewards = 0
 
     # Iterate over the total number of time steps
     for t in range(total_timesteps):
@@ -188,10 +189,14 @@ def learn(env,
         for f in range(action_repeat):
             frames_in_episode += 1
             new_obs, rew, done, _ = env.step(env_action)
+            early_done, n_neg_rewards = check_early_stop(rew, n_neg_rewards,
+                                                         frames_in_episode)
             # episode linear reward increment
             if rew > 0:
                 rew += 0.2 * frames_in_episode
             episode_rewards[-1] += rew
+            # episode ended or early stopping
+            done = done or early_done
             if done:
                 break
 
