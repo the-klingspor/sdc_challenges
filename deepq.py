@@ -11,6 +11,7 @@ import os
 import matplotlib
 import time
 
+
 def evaluate(env, new_actions = None, load_path='agent.t7'):
     """ Evaluate a trained model and compute your leaderboard scores
 
@@ -172,7 +173,8 @@ def learn(env,
     obs = get_state(env.reset())
 
     start = time.time()
-    
+    frames_in_episode = 0
+
     # Iterate over the total number of time steps
     for t in range(total_timesteps):
 
@@ -184,16 +186,17 @@ def learn(env,
 
         # Perform action fram_skip-times
         for f in range(action_repeat):
+            frames_in_episode += 1
             new_obs, rew, done, _ = env.step(env_action)
+            # episode linear reward increment
+            if rew > 0:
+                rew += 0.2 * frames_in_episode
             episode_rewards[-1] += rew
             if done:
                 break
 
             # you can comment out this.
             #env.render()
-
-        # update lr
-        scheduler.step()
 
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
@@ -205,11 +208,15 @@ def learn(env,
             print("timestep: " + str(t) + " \t reward: " + str(episode_rewards[-1]))
             obs = get_state(env.reset())
             episode_rewards.append(0.0)
+            frames_in_episode = 0
 
         if t > learning_starts and t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
             loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning)
             training_losses.append(loss)
+
+            # update lr
+            scheduler.step()
 
         if not t > learning_starts:
             if use_ema:
@@ -229,5 +236,5 @@ def learn(env,
     torch.save(policy_net.state_dict(), os.path.join ( outdir, model_identifier+'.t7' ))
 
     # Visualize the training loss and cumulative reward curves
-    visualize_training(episode_rewards, training_losses, model_identifier, outdir )
+    visualize_training(episode_rewards, training_losses, model_identifier, outdir)
  

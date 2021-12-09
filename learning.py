@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
-def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning=False, use_ema):
+def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning=False, use_ema=False):
     """ Perform a deep Q-learning step
     Parameters
     -------
@@ -23,6 +23,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
         device on which to the models are allocated
     use_ema: bool
         whether an exponential moving average is used as target network
+
     Returns
     -------
     float
@@ -39,7 +40,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
 
     # 2. Compute Q(s_t, a)
     with torch.no_grad():
-        prediction = policy_net(obs_batch)[np.arange(batch_size),act_batch]
+        prediction = policy_net(obs_batch)[np.arange(batch_size), act_batch]
     
     # 3. Compute \max_a Q(s_{t+1}, a) for all next states.
     with torch.no_grad():
