@@ -41,8 +41,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
             next_obs_batch = next_obs_batch.cuda()
 
     # 2. Compute Q(s_t, a)
-    with torch.no_grad():
-        prediction = policy_net(obs_batch)[np.arange(batch_size), act_batch]
+    prediction = policy_net(obs_batch)[np.arange(batch_size), act_batch]
     
     # 3. Compute \max_a Q(s_{t+1}, a) for all next states.
     with torch.no_grad():
@@ -59,6 +58,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     target = rew_batch + gamma*MaxQ
 
     # 6. Compute the loss
+    #loss = ((prediction - target)**2).mean()
     loss = F.smooth_l1_loss(prediction,target)
 
     # 7. Calculate the gradients
