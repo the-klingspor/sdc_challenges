@@ -52,7 +52,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
         MaxQ = torch.amax(q_values,1)
 
     # 4. Mask next state values where episodes have terminated
-
+    MaxQ *= done_mask
 
     # 5. Compute the target
     target = rew_batch + gamma*MaxQ
