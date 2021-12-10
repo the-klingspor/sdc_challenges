@@ -241,5 +241,5 @@ def learn(env,
     torch.save(policy_net.state_dict(), os.path.join ( outdir, model_identifier+'.t7' ))
 
     # Visualize the training loss and cumulative reward curves
-    visualize_training(episode_rewards, training_losses.cpu(), model_identifier, outdir)
+    visualize_training(episode_rewards, training_losses, model_identifier.cpu(), outdir)
  
