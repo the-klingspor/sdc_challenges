@@ -34,9 +34,11 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     [obs_batch, act_batch, rew_batch, next_obs_batch, done_mask] = replay_buffer.sample(batch_size)
     obs_batch = torch.tensor(obs_batch)
     rew_batch = torch.tensor(rew_batch)
+    next_obs_batch = torch.tensor(next_obs_batch)
     if torch.cuda.is_available():
             obs_batch = obs_batch.cuda()
             rew_batch = rew_batch.cuda()
+            next_obs_batch = next_obs_batch.cuda()
 
     # 2. Compute Q(s_t, a)
     with torch.no_grad():
@@ -45,9 +47,9 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     # 3. Compute \max_a Q(s_{t+1}, a) for all next states.
     with torch.no_grad():
         if use_ema:
-            q_values = target_net.ema(obs_batch)
+            q_values = target_net.ema(next_obs_batch)
         else:
-            q_values = target_net(obs_batch)
+            q_values = target_net(next_obs_batch)
         MaxQ = torch.amax(q_values,1)
 
     # 4. Mask next state values where episodes have terminated
@@ -57,18 +59,25 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     target = rew_batch + gamma*MaxQ
 
     # 6. Compute the loss
-    Loss = (target - prediction)**2
+    loss = F.smooth_l1_loss(prediction,target)
 
     # 7. Calculate the gradients
-    #stochastic gradient descent
+    optimizer.zero_grad()
+    loss.backward()
+            
 
     # 8. Clip the gradients
+    #torch.nn.utils.clip_grad_norm_(policy_net.parameters(), 2)
+    #or
+    for param in policy_net.parameters():
+        param.grad.data.clamp_(-1, 1)
 
     # 9. Optimize the model
+    optimizer.step()
 
     # Tip: You can use use_doubleqlearning to switch the learning modality.
 
-    return Loss
+    return loss
 
 
 def update_target_net(policy_net, target_net):
