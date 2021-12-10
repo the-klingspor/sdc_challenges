@@ -4,7 +4,7 @@ import argparse
 import json
 from slurm_template import slurm_template
 from datetime import datetime
-import subprocess
+import subprocesss
 
 
 def main():
@@ -57,7 +57,7 @@ def main():
         job_outfile = os.path.join ( exp_dir, "job_{0}.out".format ( idx ) )
 
         additional_args = " --agent_name " + "agent_{0}".format( idx ) + " --outdir " + exp_dir 
-        command = "singularity exec --nv ~/sdc_new_gym21.simg python train_racing.py " + exp_flag + additional_args
+        command = "singularity exec --nv ./sdc_new_gym21.simg python train_racing.py " + exp_flag + additional_args
         #print ( command )
 
         if not training_in_cluster:
