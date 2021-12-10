@@ -1,4 +1,5 @@
 data
 .idea
 sdc_gym
+*.simg
 __pycache__/
