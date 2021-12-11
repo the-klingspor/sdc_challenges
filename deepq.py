@@ -183,7 +183,7 @@ def learn(env,
         action_id = select_exploratory_action(obs, policy_net, actions, exploration, t)
         env_action = actions[action_id]
 
-        policy_net.extract_sensor_values(torch.from_numpy(obs), 1)
+        # policy_net.extract_sensor_values(torch.from_numpy(obs), 1)
 
         # Perform action fram_skip-times
         for f in range(action_repeat):

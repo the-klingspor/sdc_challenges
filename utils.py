@@ -42,9 +42,9 @@ def visualize_training(episode_rewards, training_losses, model_identifier, ourdi
 
 
 def moving_average(a, n=3):
-    ret = np.cumsum(a, dtype=float)
-    ret[n:] = ret[n:] - ret[:-n]
-    return ret[n - 1:] / n
+    a_padded = np.pad(a, (n//2, n-1-n//2), mode='edge')
+    a_smooth = np.convolve(a_padded, np.ones(n)/n, mode='valid')
+    return a_smooth
 
 
 def check_early_stop(rew, n_neg_rewards, frames_in_episode,
@@ -76,8 +76,6 @@ def check_early_stop(rew, n_neg_rewards, frames_in_episode,
         if n_neg_rewards > max_neg_rewards:
             early_done = True
             n_neg_rewards = 0
-        else:
-            early_done = False
 
     # reset counter if positive reward
     else:

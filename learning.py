@@ -61,13 +61,12 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
 
     # 6. Compute the loss
     #loss = ((prediction - target)**2).mean()
-    loss = F.smooth_l1_loss(prediction,target)
+    loss = F.smooth_l1_loss(prediction, target)
 
     # 7. Calculate the gradients
     optimizer.zero_grad()
     loss.backward()
             
-
     # 8. Clip the gradients
     #torch.nn.utils.clip_grad_norm_(policy_net.parameters(), 2)
     #or
