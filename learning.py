@@ -37,6 +37,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     next_obs_batch = torch.tensor(next_obs_batch)
     done_mask = torch.tensor(done_mask)
     act_batch = torch.tensor(act_batch,dtype=torch.long)
+    act_batch = (act_batch[None]).T
     if torch.cuda.is_available():
             obs_batch = obs_batch.cuda()
             rew_batch = rew_batch.cuda()
