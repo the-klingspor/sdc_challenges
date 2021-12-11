@@ -84,6 +84,7 @@ def learn(env,
           learning_starts=1000,
           gamma=0.95,
           target_network_update_freq=1000,
+          weight_decay=1e-6,
           new_actions=None,
           model_identifier='agent',
           outdir="",
@@ -116,6 +117,8 @@ def learn(env,
         discount factor
     target_network_update_freq: int
         update the target network every `target_network_update_freq` steps.
+    weight_decay: float
+        Weight decay of the Adam optimizer
     model_identifier: string
         identifier of the agent
     use_ema: bool
@@ -159,10 +162,10 @@ def learn(env,
     replay_buffer = ReplayBuffer(buffer_size)
 
     # Create optimizer with lr schedule
-    optimizer = optim.Adam(policy_net.parameters(), lr=lr)
+    optimizer = optim.Adam(policy_net.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer,
                                                     max_lr=lr,
-                                                    total_steps=total_timesteps)
+                                                    total_steps=total_timesteps // train_freq)
 
     # Create the schedule for exploration starting from 1.
     exploration = LinearSchedule(schedule_timesteps=int(exploration_fraction * total_timesteps),
@@ -189,9 +192,10 @@ def learn(env,
         for f in range(action_repeat):
             frames_in_episode += 1
             new_obs, rew, done, _ = env.step(env_action)
-            early_done, n_neg_rewards = check_early_stop(rew, n_neg_rewards,
-                                                         frames_in_episode)
+            early_done, punishment, n_neg_rewards = check_early_stop(rew, n_neg_rewards, episode_rewards[-1],
+                                                                     frames_in_episode)
             score = rew
+            rew += punishment
             # episode linear reward increment
             if rew > 0:
                 rew += 0.2 * frames_in_episode
@@ -202,7 +206,7 @@ def learn(env,
                 break
 
             # you can comment out this.
-            env.render()
+            # env.render()
 
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
