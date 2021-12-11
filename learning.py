@@ -61,7 +61,7 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
 
     # 5. Compute the target
     target = rew_batch + gamma * max_q
-
+    target = (target[None]).T
     # 6. Compute the loss
     #loss = ((prediction - target)**2).mean()
     loss = F.smooth_l1_loss(prediction, target)
