@@ -88,11 +88,11 @@ class DQN(nn.Module):
         observation_gray = self.to_grayscale(observation)
         # observation_gray[abs(observation_gray - 0.60116) < 0.1] = 1
         observation_gray[:,:,84:95,0:12] = 0
-        observation_gray[abs(observation_gray - 0.68616) < 0.0001] = 1
-        observation_gray[abs(observation_gray - 0.75630) < 0.0001] = 1
+        observation_gray[abs(observation_gray - 161.8638) < 0.0001] = 256
+        observation_gray[abs(observation_gray - 176.5388) < 0.0001] = 256
         #uncomment to see pre processed image
-        #plt.imshow(observation_gray[0,0,:,:], cmap='gray')
+        #obs_plt = observation_gray.cpu()
+        #plt.imshow(obs_plt[0,0,:,:], cmap='gray')
         #plt.show()
-
         #Set values between -1 and 1 for input normalization
         return 2 * observation_gray - 1
