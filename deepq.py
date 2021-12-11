@@ -191,17 +191,18 @@ def learn(env,
             new_obs, rew, done, _ = env.step(env_action)
             early_done, n_neg_rewards = check_early_stop(rew, n_neg_rewards,
                                                          frames_in_episode)
+            score = rew
             # episode linear reward increment
             if rew > 0:
                 rew += 0.2 * frames_in_episode
-            episode_rewards[-1] += rew
+            episode_rewards[-1] += score
             # episode ended or early stopping
             done = done or early_done
             if done:
                 break
 
             # you can comment out this.
-            #env.render()
+            env.render()
 
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
