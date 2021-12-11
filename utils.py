@@ -27,12 +27,24 @@ def visualize_training(episode_rewards, training_losses, model_identifier, ourdi
     model_identifier: string
         identifier of the agent
     """
-    plt.plot(np.array(episode_rewards))
+    n_avg = 100
+    episode_rewards = np.array(episode_rewards)
+    plt.plot(episode_rewards)
+    plt.plot(moving_average(episode_rewards, n_avg), color="r")
     plt.savefig(os.path.join(ourdir, "episode_rewards-"+model_identifier+".png"))
     plt.close()
-    plt.plot(np.array(training_losses))
+
+    training_losses = np.array(training_losses)
+    plt.plot(training_losses)
+    plt.plot(moving_average(training_losses, n_avg), color="r")
     plt.savefig(os.path.join(ourdir, "training_losses-"+model_identifier+".png"))
     plt.close()
+
+
+def moving_average(a, n=3):
+    ret = np.cumsum(a, dtype=float)
+    ret[n:] = ret[n:] - ret[:-n]
+    return ret[n - 1:] / n
 
 
 def check_early_stop(rew, n_neg_rewards, frames_in_episode,
