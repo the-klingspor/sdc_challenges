@@ -47,7 +47,7 @@ def moving_average(a, n=3):
     return a_smooth
 
 
-def check_early_stop(rew, n_neg_rewards, frames_in_episode,
+def check_early_stop(rew, n_neg_rewards, frames_in_episode, total_rewards,
                      max_neg_rewards=100):
     """ Check if the episode should be stopped early because of poor performance.
 
@@ -59,29 +59,36 @@ def check_early_stop(rew, n_neg_rewards, frames_in_episode,
         Number of consecutive frames with negative reward.
     frames_in_episode: int
         Number of frames of this episode seen so far
+    total_rewards: float
+        The total amount of rewards for this episode so far
     max_neg_rewards: int
 
     Returns
     -------
     early_done: bool
         Whether to stop the episode early because of poor results
+    punishment: float
+        A punishment term for the reward, if early stopping was necessary
     n_neg_rewards: int
         Number of consecutive frames with negative reward.
     """
     early_done = False
+    punishment = 0
     # increase counter and check for early stop, if negative reward
     if frames_in_episode > 10 and rew < 0:
         n_neg_rewards += 1
 
         if n_neg_rewards > max_neg_rewards:
             early_done = True
+            if total_rewards <= 500:
+                punishment = -20.0
             n_neg_rewards = 0
 
     # reset counter if positive reward
     else:
         n_neg_rewards = 0
 
-    return early_done, n_neg_rewards
+    return early_done, punishment, n_neg_rewards
 
 
 class ModelEMA:
