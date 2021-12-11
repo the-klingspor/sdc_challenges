@@ -35,10 +35,12 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     obs_batch = torch.tensor(obs_batch)
     rew_batch = torch.tensor(rew_batch)
     next_obs_batch = torch.tensor(next_obs_batch)
+    done_mask = torch.tensor(done_mask)
     if torch.cuda.is_available():
             obs_batch = obs_batch.cuda()
             rew_batch = rew_batch.cuda()
             next_obs_batch = next_obs_batch.cuda()
+            done_mask = done_mask.cuda()
 
     # 2. Compute Q(s_t, a)
     prediction = policy_net(obs_batch)[np.arange(batch_size), act_batch]
@@ -49,13 +51,13 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
             q_values = target_net.ema(next_obs_batch)
         else:
             q_values = target_net(next_obs_batch)
-        MaxQ = torch.amax(q_values,1)
+        max_q = torch.amax(q_values,1)
 
     # 4. Mask next state values where episodes have terminated
-    MaxQ *= done_mask
+    max_q *= done_mask
 
     # 5. Compute the target
-    target = rew_batch + gamma*MaxQ
+    target = rew_batch + gamma * max_q
 
     # 6. Compute the loss
     #loss = ((prediction - target)**2).mean()
