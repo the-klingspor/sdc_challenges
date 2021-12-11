@@ -76,7 +76,7 @@ def learn(env,
           lr=1e-4,
           total_timesteps=100000,
           buffer_size=100000,
-          exploration_fraction=0.1,
+          exploration_fraction=1.0,
           exploration_final_eps=0.05,
           train_freq=3,
           action_repeat=3,
@@ -218,7 +218,7 @@ def learn(env,
         if t > learning_starts and t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
             loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning)
-            training_losses.append(loss)
+            training_losses.append(loss.detach().cpu())
 
             # update lr
             scheduler.step()
@@ -241,5 +241,5 @@ def learn(env,
     torch.save(policy_net.state_dict(), os.path.join ( outdir, model_identifier+'.t7' ))
 
     # Visualize the training loss and cumulative reward curves
-    visualize_training(episode_rewards, training_losses.cpu(), model_identifier, outdir)
+    visualize_training(episode_rewards, training_losses, model_identifier, outdir)
  

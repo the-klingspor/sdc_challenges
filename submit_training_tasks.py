@@ -4,7 +4,7 @@ import argparse
 import json
 from slurm_template import slurm_template
 from datetime import datetime
-import subprocesss
+import subprocess
 
 
 def main():
@@ -29,13 +29,13 @@ def main():
     exp_flags = []
     for exp in hyperparams:
         exp_flags.append(" ".join([f"--{key} {val}" if val is not "store_true" else f"--{key}" for key, val in exp.items()]))
-    exp_flags = exp_flags [args.start:args.end]
+    exp_flags = exp_flags[args.start:args.end]
     print(exp_flags)
 
     # load SLURM specific settings
     with open(args.slurm_settings, "r") as f:
         slurm_default = json.load(f)
-    print ( slurm_default )
+    print(slurm_default)
     
     training_in_cluster = args.cluster
 
