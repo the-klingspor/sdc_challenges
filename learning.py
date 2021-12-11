@@ -36,11 +36,13 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     rew_batch = torch.tensor(rew_batch)
     next_obs_batch = torch.tensor(next_obs_batch)
     done_mask = torch.tensor(done_mask)
+    act_batch = torch.tensor(act_batch,dtype=torch.long)
     if torch.cuda.is_available():
             obs_batch = obs_batch.cuda()
             rew_batch = rew_batch.cuda()
             next_obs_batch = next_obs_batch.cuda()
             done_mask = done_mask.cuda()
+            act_batch = act_batch.cuda()
 
     # 2. Compute Q(s_t, a)
     prediction = policy_net(obs_batch).gather(1, act_batch)#[np.arange(batch_size), act_batch]
