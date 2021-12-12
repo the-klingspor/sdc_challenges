@@ -49,7 +49,7 @@ def evaluate(env, new_actions = None, load_path='agent.t7'):
     policy_net.eval()
 
     # Iterate over a number of evaluation episodes
-    for i in range(10):
+    for i in range(len(seeds)):
         env.seed(seeds[i])
         obs, done = env.reset(), False
         obs = get_state(obs)

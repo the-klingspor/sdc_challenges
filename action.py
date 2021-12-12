@@ -27,7 +27,7 @@ def select_greedy_action(state, policy_net, actions):
     return x
 
 
-def select_exploratory_action(state, policy_net, actions, exploration, t):
+def select_exploratory_action(state, policy_net, actions, exploration, t, gas_schedule=False):
     """ Select an action according to an epsilon-greedy exploration strategy
     Parameters
     -------
@@ -50,7 +50,8 @@ def select_exploratory_action(state, policy_net, actions, exploration, t):
     if exploration.value(t) >= random.uniform(0, 1):
         # over selection of gas actions
         gas_actions = np.array([a[1] == 1 and a[2] == 0 for a in actions])
-        action_weights = 4.0 * gas_actions + 1.0
+        gas_weight = exploration.value(t) if gas_schedule else 1.0
+        action_weights = 14 * gas_weight * gas_actions + 1.0
         action_weights /= np.sum(action_weights)
         return np.random.choice(action_size, p=action_weights)
     else:
