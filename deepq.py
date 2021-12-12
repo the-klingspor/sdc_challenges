@@ -35,8 +35,12 @@ def evaluate(env, new_actions = None, load_path='agent.t7'):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # These are not the final evaluation seeds, do not overfit on these tracks!
-    seeds = [22597174, 68545857, 75568192, 91140053, 86018367,
-             49636746, 66759182, 91294619, 84274995, 31531469]
+    #seeds = [22597174, 68545857, 75568192, 91140053, 86018367,
+    #         49636746, 66759182, 91294619, 84274995, 31531469]
+    seeds = [22395174, 68375857, 75568562, 91140123, 56018367,
+             49642346, 62345182, 23442619, 84242344, 53453149,
+             56795174, 34575857, 75345862, 95340123, 34518367,
+             92634566, 34534582, 23445679, 84246574, 34534549]
 
     # Build & load network
     policy_net = DQN(action_size, device).to(device)

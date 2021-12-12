@@ -42,7 +42,7 @@ def visualize_training(episode_rewards, training_losses, model_identifier, ourdi
 
 
 def moving_average(a, n=3):
-    a_padded = np.pad(a, (n//2, n-1-n//2), mode='edge')
+    a_padded = np.pad(a, (n//2, n-1-n//2), mode='median')
     a_smooth = np.convolve(a_padded, np.ones(n)/n, mode='valid')
     return a_smooth
 
