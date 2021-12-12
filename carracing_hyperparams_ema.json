@@ -1,0 +1,4 @@
+[
+    { "total_timesteps": 100000, "gamma": 0.99, "use_ema": "store_true", "action_filename":  "five_actions.txt"},
+    { "total_timesteps": "ignored"}
+]
