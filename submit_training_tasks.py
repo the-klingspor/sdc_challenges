@@ -28,7 +28,7 @@ def main():
       
     exp_flags = []
     for exp in hyperparams:
-        exp_flags.append(" ".join([f"--{key} {val}" if val is not "store_true" else f"--{key}" for key, val in exp.items()]))
+        exp_flags.append(" ".join([f"--{key} {val}" if val != "store_true" else f"--{key}" for key, val in exp.items()]))
     exp_flags = exp_flags[args.start:args.end]
     print(exp_flags)
 

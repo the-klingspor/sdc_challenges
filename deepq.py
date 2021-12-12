@@ -82,7 +82,7 @@ def learn(env,
           action_repeat=3,
           batch_size=64,
           learning_starts=1000,
-          gamma=0.95,
+          gamma=0.99,
           target_network_update_freq=1000,
           weight_decay=1e-6,
           new_actions=None,
@@ -152,7 +152,7 @@ def learn(env,
     policy_net = DQN(action_size, device).to(device)
     if use_ema:
         target_net = ModelEMA(policy_net)
-        target_net.updates = total_timesteps
+        target_net.updates = total_timesteps // train_freq
     else:
         target_net = DQN(action_size, device).to(device)
         target_net.load_state_dict(policy_net.state_dict())
@@ -222,16 +222,15 @@ def learn(env,
 
         if t > learning_starts and t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
-            loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning)
+            loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning, use_ema)
             training_losses.append(loss.detach().cpu())
 
+            if use_ema:
+                target_net.update(policy_net)
             # update lr
             scheduler.step()
 
-        if not t > learning_starts:
-            if use_ema:
-                target_net.update(policy_net)
-            elif t % target_network_update_freq == 0:
+        if t > learning_starts and not use_ema and t % target_network_update_freq == 0:
                 # Update target network periodically.
                 update_target_net(policy_net, target_net)
 

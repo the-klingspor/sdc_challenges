@@ -23,7 +23,8 @@ def select_greedy_action(state, policy_net, actions):
         state = state.cuda()
     with torch.no_grad():
         x = policy_net(state)
-    return int(torch.argmax(x))
+        x = x.max(1)[1].squeeze().cpu()
+    return x
 
 
 def select_exploratory_action(state, policy_net, actions, exploration, t):
