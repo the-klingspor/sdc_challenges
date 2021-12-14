@@ -39,6 +39,7 @@ def main ():
     parser.add_argument('--action_filename', type=str, default='five_actions.txt', help='a list of actions')
     parser.add_argument('--use_doubleqlearning', default=False, action="store_true", help='a flag that indicates the use of double q learning')
     parser.add_argument('--use_ema', default=False, action="store_true", help='a flag that indicates the use of an exponential moving average for the target network')
+    parser.add_argument('--gas_schedule', default=False, action="store_true", help='a flag that indicates the use of a linear schedule for prioritized gas actions')
     parser.add_argument('--display', default=False, action="store_true", help='a flag indicating whether training runs in the cluster')
     parser.add_argument('--agent_name', type=str, default='agent', help='an agent name')
     parser.add_argument('--outdir', type=str, default='', help='a directory for output')
@@ -53,6 +54,7 @@ def main ():
     print("action_filename:     {0}".format(args.action_filename))
     print("use_doubleqlearning: {0}".format("doubleq" if args.use_doubleqlearning else "no doubleq"))
     print("use_ema:             {0}".format("ema" if args.use_ema else "no ema"))
+    print("gas_schedule:        {0}".format("true" if args.gas_schedule else "false"))
     print("display:             {0}".format("true" if args.display else "false"))
     print("agent_name:          {0}".format(args.agent_name))
     print("outdir:              {0}".format(args.outdir))
@@ -77,7 +79,8 @@ def main ():
                 outdir=args.outdir,
                 new_actions=actions,
                 use_doubleqlearning=args.use_doubleqlearning,
-                use_ema=args.use_ema
+                use_ema=args.use_ema,
+                gas_schedule=args.gas_schedule
                 )
     
     # wrap up

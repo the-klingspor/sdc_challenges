@@ -53,13 +53,20 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
             q_values = target_net.ema(next_obs_batch)
         else:
             q_values = target_net(next_obs_batch)
-        max_q = torch.amax(q_values, 1)
+    if use_doubleqlearning:
+        next_q_values = policy_net(next_obs_batch)
+        next_state_q_values = q_values
+        # choose target action based on maximum next state policy action
+        policy_actions = torch.max(next_q_values, 1)[1][:, None]
+        expected_q = next_state_q_values.gather(1, policy_actions).squeeze()
+    else:
+        expected_q = torch.amax(q_values, 1)
 
     # 4. Mask next state values where episodes have terminated
-    max_q *= torch.abs(done_mask - 1)
+    expected_q *= 1 - done_mask
 
     # 5. Compute the target
-    target = rew_batch + gamma * max_q
+    target = rew_batch + gamma * expected_q.detach()
     target = target[:, None]
 
     # 6. Compute the loss

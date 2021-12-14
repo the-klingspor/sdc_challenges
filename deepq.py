@@ -93,7 +93,8 @@ def learn(env,
           model_identifier='agent',
           outdir="",
           use_doubleqlearning=False,
-          use_ema=False):
+          use_ema=False,
+          gas_schedule=False):
     """ Train a deep q-learning model.
     Parameters
     -------
@@ -127,6 +128,8 @@ def learn(env,
         identifier of the agent
     use_ema: bool
         Whether to use an exponential moving average
+    gas_schedule: bool
+        Whether to use a linear schedule for prioritizing gas actions
     """
 
     # set float as default
@@ -187,7 +190,8 @@ def learn(env,
     for t in range(total_timesteps):
 
         # Select action
-        action_id = select_exploratory_action(obs, policy_net, actions, exploration, t)
+        action_id = select_exploratory_action(obs, policy_net, actions,
+                                              exploration, t, gas_schedule)
         env_action = actions[action_id]
 
         # policy_net.extract_sensor_values(torch.from_numpy(obs), 1)

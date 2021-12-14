@@ -36,7 +36,6 @@ class DQN(nn.Module):
             torch.nn.ReLU(),
             torch.nn.Linear(400, 5)
         )
-
         if torch.cuda.is_available():
             self.nn = self.nn.cuda()
 
