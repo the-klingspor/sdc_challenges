@@ -43,6 +43,7 @@ def main ():
     parser.add_argument('--display', default=False, action="store_true", help='a flag indicating whether training runs in the cluster')
     parser.add_argument('--agent_name', type=str, default='agent', help='an agent name')
     parser.add_argument('--outdir', type=str, default='', help='a directory for output')
+    parser.add_argument('--buffer_size', type=int, default=100000, help='buffer size')
 
     args = parser.parse_args()
 
@@ -58,6 +59,7 @@ def main ():
     print("display:             {0}".format("true" if args.display else "false"))
     print("agent_name:          {0}".format(args.agent_name))
     print("outdir:              {0}".format(args.outdir))
+    print("buffer_size:              {0}".format(args.buffer_size))
 
     # load a virtual display if we run training in the cluster that has no main display.
     if not args.display:
@@ -80,7 +82,8 @@ def main ():
                 new_actions=actions,
                 use_doubleqlearning=args.use_doubleqlearning,
                 use_ema=args.use_ema,
-                gas_schedule=args.gas_schedule
+                gas_schedule=args.gas_schedule,
+                buffer_size=args.buffer_size
                 )
     
     # wrap up
