@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn.functional as F
+import gc
 
 
 def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning=False, use_ema=False):
@@ -53,20 +54,20 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
             q_values = target_net.ema(next_obs_batch)
         else:
             q_values = target_net(next_obs_batch)
-    if use_doubleqlearning:
-        next_q_values = policy_net(next_obs_batch)
-        next_state_q_values = q_values
-        # choose target action based on maximum next state policy action
-        policy_actions = torch.max(next_q_values, 1)[1][:, None]
-        expected_q = next_state_q_values.gather(1, policy_actions).squeeze()
-    else:
-        expected_q = torch.amax(q_values, 1)
+        if use_doubleqlearning:
+            next_q_values = policy_net(next_obs_batch)
+            next_state_q_values = q_values
+            # choose target action based on maximum next state policy action
+            policy_actions = torch.max(next_q_values, 1)[1][:, None]
+            expected_q = next_state_q_values.gather(1, policy_actions).squeeze()
+        else:
+            expected_q = torch.amax(q_values, 1)
 
     # 4. Mask next state values where episodes have terminated
     expected_q *= 1 - done_mask
 
     # 5. Compute the target
-    target = rew_batch + gamma * expected_q.detach()
+    target = rew_batch + gamma * expected_q
     target = target[:, None]
 
     # 6. Compute the loss
@@ -88,8 +89,6 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
 
     # 9. Optimize the model
     optimizer.step()
-
-    # Tip: You can use use_doubleqlearning to switch the learning modality.
 
     return loss
 

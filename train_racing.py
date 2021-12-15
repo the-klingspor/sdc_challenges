@@ -36,6 +36,7 @@ def main ():
     parser.add_argument('--total_timesteps', type=int, default=100000, help='The number of env steps to take')
     parser.add_argument('--action_repeats', type=int, default=3, help='Update the model every action_repeats steps')
     parser.add_argument('--gamma', type=float, default=0.95, help='selection action on every n-th frame and repeat action for intermediate frames')
+    parser.add_argument('--exploration_fraction', type=float, default=1.0, help='amount of time to use epsilon greedy exploration')
     parser.add_argument('--action_filename', type=str, default='five_actions.txt', help='a list of actions')
     parser.add_argument('--use_doubleqlearning', default=False, action="store_true", help='a flag that indicates the use of double q learning')
     parser.add_argument('--use_ema', default=False, action="store_true", help='a flag that indicates the use of an exponential moving average for the target network')
@@ -51,6 +52,7 @@ def main ():
     print("total_timesteps:     {0}".format(args.total_timesteps))
     print("action_repeats:      {0}".format(args.action_repeats))
     print("gamma:               {0}".format(args.gamma))
+    print("exploration_fraction {0}".format(args.exploration_fraction))
     print("action_filename:     {0}".format(args.action_filename))
     print("use_doubleqlearning: {0}".format("doubleq" if args.use_doubleqlearning else "no doubleq"))
     print("use_ema:             {0}".format("ema" if args.use_ema else "no ema"))
@@ -75,6 +77,7 @@ def main ():
     deepq.learn(env, total_timesteps=args.total_timesteps,
                 action_repeat=args.action_repeats,
                 gamma=args.gamma,
+                exploration_fraction=args.exploration_fraction,
                 model_identifier=args.agent_name,
                 outdir=args.outdir,
                 new_actions=actions,

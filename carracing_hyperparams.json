@@ -1,9 +1,6 @@
 [
-    { "total_timesteps": 1000000, "gamma": 0.95, "gas_schedule": "store_true", "use_doubleqlearning": "store_true","action_filename":  "five_actions.txt"},
-    { "total_timesteps": 2000000, "gamma": 0.95, "action_filename":  "five_actions.txt"},
-    { "total_timesteps": 2000000, "gamma": 0.95, "gas_schedule": "store_true", "action_filename":  "five_actions.txt"},
-    { "total_timesteps": 2000000, "gamma": 0.95, "action_filename":  "five_actions_breaking_0.8.txt"},
-    { "total_timesteps": 2000000, "gamma": 0.99, "action_filename":  "five_actions.txt"},
-    { "total_timesteps": 2000000, "gamma": 0.99, "action_filename":  "five_actions_breaking_0.8.txt"},
+    { "total_timesteps": 2000000, "gamma": 0.95, "exploration_fraction": 0.4, "gas_schedule": "store_true", "action_filename":  "six_actions.txt"},
+    { "total_timesteps": 2000000, "gamma": 0.95, "exploration_fraction": 0.4, "gas_schedule": "store_true", "action_filename":  "five_actions.txt"},
+    { "total_timesteps": 2000000, "gamma": 0.99, "exploration_fraction": 0.4, "gas_schedule": "store_true", "action_filename":  "five_actions.txt"},
     { "total_timesteps": "ignored"}
 ]

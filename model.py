@@ -24,6 +24,7 @@ class DQN(nn.Module):
         self.to_grayscale = transforms.Grayscale(num_output_channels=1)
 
         # architecture:
+        #"""
         self.nn = torch.nn.Sequential(
             torch.nn.Conv2d(1, 8, kernel_size=7, stride=4, padding=0),  # output: 23x23x8, kernelsize 8? with 7 you drop one column, but who cares right, nothing of interest at the border?
             torch.nn.ReLU(),
@@ -34,8 +35,22 @@ class DQN(nn.Module):
             torch.nn.Flatten(),
             torch.nn.Linear(400, 400),
             torch.nn.ReLU(),
-            torch.nn.Linear(400, 5)
+            torch.nn.Linear(400, action_size)
         )
+        """ architecture 2
+        self.nn = torch.nn.Sequential(
+            torch.nn.Conv2d(1, 32, kernel_size=7, stride=2, padding=3),   # output: 48x48x32
+            torch.nn.Mish(),
+            torch.nn.MaxPool2d(3, stride=2, padding=1),                   # output: 24x24x32
+            torch.nn.Conv2d(32, 48, kernel_size=3, stride=2, padding=1),  # output: 12x12x48
+            torch.nn.Mish(),
+            torch.nn.MaxPool2d(3, stride=2, padding=1),                   # output: 6x6x48
+            torch.nn.Flatten(),
+            torch.nn.Linear(6*6*48, 256),
+            torch.nn.Mish(),
+            torch.nn.Linear(256, actions_size)
+        )
+        """
         if torch.cuda.is_available():
             self.nn = self.nn.cuda()
 
