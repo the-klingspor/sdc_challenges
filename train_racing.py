@@ -61,7 +61,7 @@ def main ():
     print("display:             {0}".format("true" if args.display else "false"))
     print("agent_name:          {0}".format(args.agent_name))
     print("outdir:              {0}".format(args.outdir))
-    print("buffer_size:              {0}".format(args.buffer_size))
+    print("buffer_size:         {0}".format(args.buffer_size))
 
     # load a virtual display if we run training in the cluster that has no main display.
     if not args.display:
