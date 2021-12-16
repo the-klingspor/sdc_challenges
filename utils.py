@@ -48,7 +48,7 @@ def moving_average(a, n=3):
 
 
 def check_early_stop(rew, n_neg_rewards, frames_in_episode, total_rewards,
-                     max_neg_rewards=100):
+                     max_neg_rewards=100, exploration=None, t=0):
     """ Check if the episode should be stopped early because of poor performance.
 
     Parameters:
@@ -72,6 +72,9 @@ def check_early_stop(rew, n_neg_rewards, frames_in_episode, total_rewards,
     n_neg_rewards: int
         Number of consecutive frames with negative reward.
     """
+    if exploration:
+        max_neg_rewards = (0.5 * exploration.value(t) + 0.5) * max_neg_rewards
+
     early_done = False
     punishment = 0
     # increase counter and check for early stop, if negative reward

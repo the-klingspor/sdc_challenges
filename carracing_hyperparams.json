@@ -1,5 +1,5 @@
 [
-    { "total_timesteps": 6000000, "gamma": 0.95, "buffer_size": 200000, "exploration_fraction": 0.2,
-        "gas_schedule": "store_true", "action_filename":  "six_actions.txt"},
+    { "total_timesteps": 1000000, "gamma": 0.95, "buffer_size": 100000, "exploration_fraction": 0.5,
+        "gas_schedule": "store_true", "action_filename":  "five_actions.txt"},
     { "total_timesteps": "ignored"}
 ]
