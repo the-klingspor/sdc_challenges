@@ -210,6 +210,8 @@ def learn(env,
             episode_rewards[-1] += score
             # episode ended or early stopping
             done = done or early_done
+            if(frames_in_episode > 600):
+                done = True
             if done:
                 break
 
