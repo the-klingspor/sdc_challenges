@@ -1,6 +1,9 @@
 import numpy as np
 import random
 
+UPDATE_MEM_EVERY = 20          # how often to update the priorities
+UPDATE_MEM_PAR_EVERY = 3000     # how often to update the hyperparameters
+EXPERIENCES_PER_SAMPLING = math.ceil(BATCH_SIZE * UPDATE_MEM_EVERY / UPDATE_NN_EVERY)
 
 class ReplayBuffer(object):
     def __init__(self, size):
@@ -177,7 +180,24 @@ class PrioritizedReplayBuffer(object):
         print("sum_prob before", sum_prob_before)
         print("sum_prob after : ", sum_prob_after)
     
-    def add(self, state, action, reward, next_state, done):
+    def add (self, state, action, reward, next_state, done):
+        self.add_to_buffer(state, action, reward, next_state, done)
+        
+        # Learn every UPDATE_NN_EVERY time steps.
+        self.t_step_nn = (self.t_step_nn + 1) % UPDATE_NN_EVERY
+        self.t_step_mem = (self.t_step_mem + 1) % UPDATE_MEM_EVERY
+        self.t_step_mem_par = (self.t_step_mem_par + 1) % UPDATE_MEM_PAR_EVERY
+        if self.t_step_mem_par == 0:
+            self.memory.update_parameters()
+        if self.t_step_nn == 0:
+            # If enough samples are available in memory, get random subset and learn
+            if self.memory.experience_count > EXPERIENCES_PER_SAMPLING:
+                sampling = self.memory.sample()
+                self.learn(sampling, GAMMA)
+        if self.t_step_mem == 0:
+            self.memory.update_memory_sampling()
+
+    def add_to_buffer(self, state, action, reward, next_state, done):
         """Add a new experience to memory."""
         self.experience_count += 1
         index = self.experience_count % self.buffer_size

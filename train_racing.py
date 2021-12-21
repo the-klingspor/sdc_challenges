@@ -88,7 +88,7 @@ def main ():
                 use_doubleqlearning=args.use_doubleqlearning,
                 use_ema=args.use_ema,
                 gas_schedule=args.gas_schedule,
-                buffer_size=args.buffer_size
+                buffer_size=args.buffer_size,
                 PRB=args.PRB
                 )
     

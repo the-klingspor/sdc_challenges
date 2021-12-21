@@ -227,11 +227,7 @@ def learn(env,
 
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
-        if(PRB){
-            replay_buffer.step(obs, action_id, rew, new_obs, float(done))
-        } else {
-            replay_buffer.add(obs, action_id, rew, new_obs, float(done))
-        }
+        replay_buffer.add(obs, action_id, rew, new_obs, float(done))
         obs = new_obs
 
         if done:
