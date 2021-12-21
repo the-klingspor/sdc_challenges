@@ -91,11 +91,10 @@ def perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, bat
     optimizer.step()
 
     # ------------------- update priorities ------------------- #
-    if(PRB){
+    if(PRB):
         delta = abs(target - prediction).numpy()
         #print("delta", delta)      
         self.memory.update_priorities(delta, indices)  
-    }
 
     return loss
 
