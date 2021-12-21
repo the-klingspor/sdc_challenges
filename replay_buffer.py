@@ -226,7 +226,7 @@ class PrioritizedReplayBuffer(object):
         d = self.data(priority, probability, weight, index)
         self.memory_data[index] = d
             
-    def sample(self):
+    def sample(self,batch_size):
         sampled_batch = self.sampled_batches[self.current_batch]
         self.current_batch += 1
         experiences = []
