@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import math
+from collections import namedtuple
 
 UPDATE_NN_EVERY = 1
 UPDATE_MEM_EVERY = 20          # how often to update the priorities
