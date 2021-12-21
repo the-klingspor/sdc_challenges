@@ -6,6 +6,8 @@ from collections import namedtuple, deque
 from numpy.random import choice
 import torch
 
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 UPDATE_NN_EVERY = 1
 UPDATE_MEM_EVERY = 20          # how often to update the priorities
 UPDATE_MEM_PAR_EVERY = 3000     # how often to update the hyperparameters
