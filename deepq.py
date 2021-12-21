@@ -208,7 +208,7 @@ def learn(env,
             frames_in_episode += 1
             new_obs, rew, done, _ = env.step(env_action)
             early_done, punishment, n_neg_rewards = check_early_stop(rew, n_neg_rewards, episode_rewards[-1],
-                                                                     frames_in_episode)
+                                                                     frames_in_episode, exploration=exploration, t=t)
             score = rew
             rew += punishment
             # episode linear reward increment
