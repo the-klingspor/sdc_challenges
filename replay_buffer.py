@@ -1,9 +1,9 @@
 import numpy as np
 import random
+import math
 
 UPDATE_MEM_EVERY = 20          # how often to update the priorities
 UPDATE_MEM_PAR_EVERY = 3000     # how often to update the hyperparameters
-EXPERIENCES_PER_SAMPLING = math.ceil(BATCH_SIZE * UPDATE_MEM_EVERY / UPDATE_NN_EVERY)
 
 class ReplayBuffer(object):
     def __init__(self, size):
@@ -81,7 +81,7 @@ class ReplayBuffer(object):
 
 class PrioritizedReplayBuffer(object):
     """Fixed-size buffer to store experience tuples."""
-    def __init__(self, action_size, buffer_size, batch_size, experiences_per_sampling=EXPERIENCES_PER_SAMPLING, seed=25, compute_weights=False):
+    def __init__(self, action_size, buffer_size, batch_size, seed=25, compute_weights=False):
         """Initialize a ReplayBuffer object.
         Params
         ======
@@ -94,7 +94,7 @@ class PrioritizedReplayBuffer(object):
         self.action_size = action_size
         self.buffer_size = buffer_size
         self.batch_size = batch_size
-        self.experiences_per_sampling = experiences_per_sampling
+        self.experiences_per_sampling = math.ceil(batch_size * UPDATE_MEM_EVERY / UPDATE_NN_EVERY)
 
         self.alpha = 0.5
         self.alpha_decay_rate = 0.99
