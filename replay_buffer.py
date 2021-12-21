@@ -80,7 +80,7 @@ class ReplayBuffer(object):
         return self._encode_sample(idxes)
 
 class PrioritizedReplayBuffer(object):
-     """Fixed-size buffer to store experience tuples."""
+    """Fixed-size buffer to store experience tuples."""
     def __init__(self, action_size, buffer_size, batch_size, experiences_per_sampling=EXPERIENCES_PER_SAMPLING, seed=25, compute_weights=False):
         """Initialize a ReplayBuffer object.
         Params
@@ -95,7 +95,7 @@ class PrioritizedReplayBuffer(object):
         self.buffer_size = buffer_size
         self.batch_size = batch_size
         self.experiences_per_sampling = experiences_per_sampling
-        
+
         self.alpha = 0.5
         self.alpha_decay_rate = 0.99
         self.beta = 0.5
@@ -103,7 +103,7 @@ class PrioritizedReplayBuffer(object):
         self.seed = random.seed(seed)
         self.compute_weights = compute_weights
         self.experience_count = 0
-        
+
         self.experience = namedtuple("Experience", 
             field_names=["state", "action", "reward", "next_state", "done"])
         self.data = namedtuple("Data", 
@@ -115,7 +115,7 @@ class PrioritizedReplayBuffer(object):
             indexes.append(i)
             d = self.data(0,0,0,i)
             datas.append(d)
-        
+
         self.memory = {key: self.experience for key in indexes}
         self.memory_data = {key: data for key,data in zip(indexes, datas)}
         self.sampled_batches = []

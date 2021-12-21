@@ -171,7 +171,7 @@ def learn(env,
 
     # Create replay buffer
     if(PRB):
-        replay_buffer = PrioritizedReplayBuffer(action_size, buffer_size, batch_size):
+        replay_buffer = PrioritizedReplayBuffer(action_size, buffer_size, batch_size)
     else:
         replay_buffer = ReplayBuffer(buffer_size)
 
