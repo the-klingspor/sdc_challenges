@@ -237,7 +237,7 @@ class PrioritizedReplayBuffer(object):
             experiences.append(self.memory.get(data.index))
             weights.append(data.weight)
             indices.append(data.index)
-
+        '''
         states = torch.from_numpy(
             np.vstack([e.state for e in experiences if e is not None])).float().to(device)
         actions = torch.from_numpy(
@@ -248,7 +248,12 @@ class PrioritizedReplayBuffer(object):
             np.vstack([e.next_state for e in experiences if e is not None])).float().to(device)
         dones = torch.from_numpy(
             np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
-
+        '''
+        states = np.vstack([e.state for e in experiences if e is not None])
+        actions = np.vstack([e.action for e in experiences if e is not None])
+        rewards = np.vstack([e.reward for e in experiences if e is not None])
+        next_states = np.vstack([e.next_state for e in experiences if e is not None])
+        dones = np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8))
         return (states, actions, rewards, next_states, dones)
 
     def __len__(self):
