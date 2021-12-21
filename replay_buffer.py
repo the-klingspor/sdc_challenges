@@ -105,6 +105,7 @@ class PrioritizedReplayBuffer(object):
         self.seed = random.seed(seed)
         self.compute_weights = compute_weights
         self.experience_count = 0
+        self.t_step_nn = 0
 
         self.experience = namedtuple("Experience", 
             field_names=["state", "action", "reward", "next_state", "done"])
