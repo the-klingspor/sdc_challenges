@@ -2,6 +2,7 @@ import numpy as np
 import random
 import math
 
+UPDATE_NN_EVERY = 1
 UPDATE_MEM_EVERY = 20          # how often to update the priorities
 UPDATE_MEM_PAR_EVERY = 3000     # how often to update the hyperparameters
 
