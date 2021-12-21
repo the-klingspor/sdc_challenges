@@ -106,6 +106,8 @@ class PrioritizedReplayBuffer(object):
         self.compute_weights = compute_weights
         self.experience_count = 0
         self.t_step_nn = 0
+        self.t_step_mem  = 0
+        self.t_step_mem_par = 0
 
         self.experience = namedtuple("Experience", 
             field_names=["state", "action", "reward", "next_state", "done"])
@@ -190,14 +192,14 @@ class PrioritizedReplayBuffer(object):
         self.t_step_mem = (self.t_step_mem + 1) % UPDATE_MEM_EVERY
         self.t_step_mem_par = (self.t_step_mem_par + 1) % UPDATE_MEM_PAR_EVERY
         if self.t_step_mem_par == 0:
-            self.memory.update_parameters()
+            self.update_parameters()
         if self.t_step_nn == 0:
             # If enough samples are available in memory, get random subset and learn
-            if self.memory.experience_count > EXPERIENCES_PER_SAMPLING:
-                sampling = self.memory.sample()
+            if self.experience_count > EXPERIENCES_PER_SAMPLING:
+                sampling = self.sample()
                 self.learn(sampling, GAMMA)
         if self.t_step_mem == 0:
-            self.memory.update_memory_sampling()
+            self.update_memory_sampling()
 
     def add_to_buffer(self, state, action, reward, next_state, done):
         """Add a new experience to memory."""
