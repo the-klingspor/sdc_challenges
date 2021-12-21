@@ -195,7 +195,7 @@ class PrioritizedReplayBuffer(object):
             self.update_parameters()
         if self.t_step_nn == 0:
             # If enough samples are available in memory, get random subset and learn
-            if self.experience_count > EXPERIENCES_PER_SAMPLING:
+            if self.experience_count > self.experiences_per_sampling:
                 sampling = self.sample()
                 self.learn(sampling, GAMMA)
         if self.t_step_mem == 0:
