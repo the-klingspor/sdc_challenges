@@ -45,6 +45,7 @@ def main ():
     parser.add_argument('--agent_name', type=str, default='agent', help='an agent name')
     parser.add_argument('--outdir', type=str, default='', help='a directory for output')
     parser.add_argument('--buffer_size', type=int, default=100000, help='buffer size')
+    parser.add_argument('--PRB', default=False, action='store_true', help='a flag to enable th prioritized replay buffer')
 
     args = parser.parse_args()
 
@@ -61,7 +62,8 @@ def main ():
     print("display:             {0}".format("true" if args.display else "false"))
     print("agent_name:          {0}".format(args.agent_name))
     print("outdir:              {0}".format(args.outdir))
-    print("buffer_size:              {0}".format(args.buffer_size))
+    print("buffer_size:         {0}".format(args.buffer_size))
+    print("prioritized replay buffer (PRB): {0}".format(args.PRB))
 
     # load a virtual display if we run training in the cluster that has no main display.
     if not args.display:
@@ -87,6 +89,7 @@ def main ():
                 use_ema=args.use_ema,
                 gas_schedule=args.gas_schedule,
                 buffer_size=args.buffer_size
+                PRB=args.PRB
                 )
     
     # wrap up

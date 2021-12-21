@@ -5,6 +5,7 @@ from action import ActionSet, select_exploratory_action, select_greedy_action
 from learning import perform_qlearning_step, update_target_net
 from model import DQN
 from replay_buffer import ReplayBuffer
+from replay_buffer import PrioritizedReplayBuffer
 from schedule import LinearSchedule
 from utils import get_state, visualize_training, ModelEMA, check_early_stop
 import os
@@ -94,7 +95,8 @@ def learn(env,
           outdir="",
           use_doubleqlearning=False,
           use_ema=False,
-          gas_schedule=False):
+          gas_schedule=False,
+          PRB=False):
     """ Train a deep q-learning model.
     Parameters
     -------
@@ -130,6 +132,8 @@ def learn(env,
         Whether to use an exponential moving average
     gas_schedule: bool
         Whether to use a linear schedule for prioritizing gas actions
+    PRB: bool
+        Whether to use a prioritized replay buffers
     """
 
     # set float as default
@@ -166,7 +170,10 @@ def learn(env,
         target_net.eval()
 
     # Create replay buffer
-    replay_buffer = ReplayBuffer(buffer_size)
+    if(PRB):
+        replay_buffer = PrioritizedReplayBuffer(buffer_size)
+    else:
+        replay_buffer = ReplayBuffer(buffer_size)
 
     # Create optimizer with lr schedule
     optimizer = optim.Adam(policy_net.parameters(), lr=lr, weight_decay=weight_decay)
@@ -220,7 +227,11 @@ def learn(env,
 
         # Store transition in the replay buffer.
         new_obs = get_state(new_obs)
-        replay_buffer.add(obs, action_id, rew, new_obs, float(done))
+        if(PRB){
+            replay_buffer.step(obs, action_id, rew, new_obs, float(done))
+        } else {
+            replay_buffer.add(obs, action_id, rew, new_obs, float(done))
+        }
         obs = new_obs
 
         if done:
@@ -232,7 +243,7 @@ def learn(env,
 
         if t > learning_starts and t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
-            loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning, use_ema)
+            loss = perform_qlearning_step(policy_net, target_net, optimizer, replay_buffer, batch_size, gamma, device, use_doubleqlearning, use_ema, PRB=PRB)
             training_losses.append(loss.detach().cpu())
 
             if use_ema:
