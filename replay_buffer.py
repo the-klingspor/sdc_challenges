@@ -198,11 +198,6 @@ class PrioritizedReplayBuffer(object):
         self.t_step_mem_par = (self.t_step_mem_par + 1) % UPDATE_MEM_PAR_EVERY
         if self.t_step_mem_par == 0:
             self.update_parameters()
-        if self.t_step_nn == 0:
-            # If enough samples are available in memory, get random subset and learn
-            if self.experience_count > self.experiences_per_sampling:
-                sampling = self.sample()
-                self.learn(sampling, GAMMA)
         if self.t_step_mem == 0:
             self.update_memory_sampling()
 
@@ -254,7 +249,7 @@ class PrioritizedReplayBuffer(object):
         dones = torch.from_numpy(
             np.vstack([e.done for e in experiences if e is not None]).astype(np.uint8)).float().to(device)
 
-        return (states, actions, rewards, next_states, dones, weights, indices)
+        return (states, actions, rewards, next_states, dones)
 
     def __len__(self):
         """Return the current size of internal memory."""
