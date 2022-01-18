@@ -41,8 +41,46 @@ class LaneDetection:
             gray_state_image 68x96x1
 
         '''
-        
-        return gray_state_image[::-1] 
+        # Weighted RGB
+        #gray_state_image2 = (state_image_full[:68,:,0] * 0.299 + state_image_full[:68,:,0] * 0.587 + state_image_full[:68,:,0] * 0.114)[None]
+
+        # Averaged RGB
+        #gray_state_image = np.mean(state_image_full[:68,:,],axis=2)[None] # shape : (1, 68, 96)
+
+        # only Green - Street: (102,102,102) or (105,105,105) or (107,107,107), Gras: (102,229,102) or (102,204,102), Curve Markings: (255,255,255) or (255,0,0), font of the car (last bottom row) (204,0,0), tires (0,0,0)
+        # going straight, only the center bottom row show the 204 red front of the car. In some manouviers the front of the car can extend in the second bottom row and tires can be seen. Also motion blure can mix car and tire colors.
+        # A difference in more than 97 in the green value is an edge of the road
+        h_diff = np.abs(state_image_full[:68,:,1] - np.hstack((state_image_full[:68,1:,1],np.ones((68,1))*204)))
+        h_grad = np.zeros((68,96,12),dtype=bool)
+        #for i,value in enumerate([97, 99, 102, 122, 124, 127, 229, 204, 26, 51]):
+        for i,value in enumerate([97, 99, 102, 122, 124, 127, 153, 150, 148, 102,105,107]):
+            h_grad[:,:,i] = h_diff == value
+        h_grad = np.sum(h_grad,axis=2)
+        # values: boarder green shades to road shades then red-white curve-border to road
+        # if the car is next to the gras and covering the last road pixel with its red shape -> the lane won't be detected there
+        # => maybe skip also the bottom two line
+        v_diff = np.abs(state_image_full[:68,:,1] - np.vstack((np.ones((1,96))*204,state_image_full[:67,:,1])))
+        v_grad = np.zeros((68,96,12),dtype=bool)
+        for i,value in enumerate([97, 99, 102, 122, 124, 127, 153, 150, 148, 102,105,107]):
+            v_grad[:,:,i] = v_diff == value
+        v_grad = np.sum(v_grad,axis=2)
+        # same for vertical gradient
+
+        total_grad = (v_grad + h_grad)> 0 
+        removed_car = state_image_full[:68,:,0] != 204 # remove car gradients
+        total_grad[67,45] = False
+        total_grad = total_grad & removed_car
+        total_grad[0,:] = False # remove boarder from shifting 
+        total_grad[:,95] = False # remove boarder from shifting
+
+        plt.imshow(h_grad)
+        plt.show()
+        plt.imshow(v_grad)
+        plt.show()
+        plt.imshow(total_grad)
+        plt.show()
+        #return gray_state_image[::-1] # flip image for some reason
+        return total_grad
 
 
     def edge_detection(self, gray_image):
@@ -60,7 +98,8 @@ class LaneDetection:
             gradient_sum 68x96x1
 
         '''
-        
+        # There won't be a road Edge in the first rows for a narrow curve
+        gradient_sum = 0
         return gradient_sum
 
 
@@ -78,7 +117,7 @@ class LaneDetection:
             maxima (np.array) 2x Number_maxima
 
         '''
-
+        argmaxima = 0
         return argmaxima
 
 
@@ -156,12 +195,12 @@ class LaneDetection:
             lane_boundary2 spline
         '''
 
-        # to gray
-        gray_state = self.cut_gray(state_image_full)
+        # to gray + find gradients
+        gradient_sum = self.cut_gray(state_image_full)
 
         # edge detection via gradient sum and thresholding
-        gradient_sum = self.edge_detection(gray_state)
-        maxima = self.find_maxima_gradient_rowwise(gradient_sum)
+        #gradient_sum = self.edge_detection(gray_state)
+        #maxima = self.find_maxima_gradient_rowwise(gradient_sum)
 
         # first lane_boundary points
         lane_boundary1_points, lane_boundary2_points, lane_found = self.find_first_lane_point(gradient_sum)
@@ -196,7 +235,7 @@ class LaneDetection:
                 # lane_boundary 1
 
                 # lane_boundary 2
-                
+                print("nix")
             else:
                 lane_boundary1 = self.lane_boundary1_old
                 lane_boundary2 = self.lane_boundary2_old

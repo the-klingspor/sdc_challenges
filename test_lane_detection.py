@@ -42,16 +42,22 @@ restart = False
 LD_module = LaneDetection()
 
 # init extra plot
-fig = plt.figure()
-plt.ion()
-plt.show()
-
+#fig = plt.figure()
+#plt.ion()
+#plt.show()
+count = 0
 while True:
     # perform step
     s, r, done, speed, info = env.step(a)
-
+    if(count % 100 == 0):
+        plt.imshow(s[:68,:,:])
+        plt.show()
+        grey = LD_module.cut_gray(s)
+        #plt.imshow(grey)
+        plt.show()
+    count += 1
     # lane detection
-    splines = LD_module.lane_detection(s)
+    #splines = LD_module.lane_detection(s)
     
     # reward
     total_reward += r
@@ -60,7 +66,7 @@ while True:
     if steps % 2 == 0 or done:
         print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
         print("step {} total_reward {:+0.2f}".format(steps, total_reward))
-        LD_module.plot_state_lane(s, steps, fig)
+        #LD_module.plot_state_lane(s, steps, fig)
     steps += 1
     env.render()
     
