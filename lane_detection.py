@@ -7,10 +7,11 @@ import time
 
 '''
 Possible improvements:
-    - Removing Car and Tire gradients check not across whole image but only center where the car is (cut_gray , line 76)
+    - Removing Car and Tire gradients check not across whole image but only center where the car is (cut_gray , line 76) -> Save computation time
     - Find start points in lane detection not on front row of the car but bottom row of the image bzw consider whole image(find_first_lane_point)
     - Start point search uses road width of 20. If car is positioned skewed or orthogonal, road width is higher up to infinity -> no start points detected
     - Instead of looped neighbourhood search across rows, neighbourhood search in local neighbourhood of found points (lane_detection)
+    - center line calculation ahead even if only on lane is visible
 '''
 
 class LaneDetection:
