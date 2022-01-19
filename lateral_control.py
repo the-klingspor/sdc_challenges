@@ -28,22 +28,29 @@ class LateralController:
 
     def stanley(self, waypoints, speed):
         '''
-        ##### TODO #####
         one step of the stanley controller with damping
         args:
             waypoints (np.array) [2, num_waypoints]
             speed (float)
         '''
         # derive orientation error as the angle of the first path segment to the car orientation
+        orientation_error = 0
 
-        # derive cross track error as distance between desired waypoint at spline parameter equal zero ot the car position
+        # derive cross track error as distance between desired waypoint at spline parameter equal zero to the car position
+        cross_track_error = 0
 
         # derive stanley control law
-        # prevent division by zero by adding as small epsilon
+
+        # prevent division by zero by adding a small epsilon
+        eps = 1e-6
+        cross_track_term = self.gain_constant * cross_track_error / (speed + eps)
+        steering_angle = orientation_error + np.arctan(cross_track_term)
 
         # derive damping term
-        
-        steering_angle =
+        steering_angle -= self.damping_constant * (steering_angle - self.previous_steering_angle)
+
+        # save steering angle
+
         # clip to the maximum stering angle (0.4) and rescale the steering action space
         return np.clip(steering_angle, -0.4, 0.4) / 0.4
 
