@@ -19,7 +19,9 @@ def key_press(k, mod):
     if k==key.LEFT:  a[0] = -1.0
     if k==key.RIGHT: a[0] = +1.0
     if k==key.UP:    a[1] = +1.0
-    if k==key.DOWN:  a[2] = +0.8   # set 1.0 for wheels to block to zero rotation
+    if k==key.DOWN:  a[2] = +0.8   # set 1.0 for wheels to block to zero rotation    
+    if k==key.R:    
+        print('stop')
 
 def key_release(k, mod):
     if k==key.LEFT  and a[0]==-1.0: a[0] = 0
@@ -55,7 +57,7 @@ while True:
     lane1, lane2 = LD_module.lane_detection(s)
 
     # waypoint and target_speed prediction
-    waypoints = waypoint_prediction(lane1, lane2)
+    waypoints = waypoint_prediction(lane1, lane2, way_type = "smooth",num_waypoints=15)
     target_speed = target_speed_prediction(waypoints)
 
     # reward
