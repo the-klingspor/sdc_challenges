@@ -1,6 +1,7 @@
 data
 .idea
 sdc_gym
+sdc21_gym
 obs.png
 *.simg
 experiments*
