@@ -1,0 +1,7 @@
+data
+.idea
+sdc_gym
+obs.png
+*.simg
+experiments*
+__pycache__/
