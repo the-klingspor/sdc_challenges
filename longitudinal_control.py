@@ -28,10 +28,9 @@ class LongitudinalController:
 
     def PID_step(self, speed, target_speed):
         '''
-        ##### TODO ####
         Perform one step of the PID control
         - Implement the descretized control law.
-        - Implement a maximum value for the sum of error you are using for the intgral term 
+        - Implement a maximum value for the sum of error you are using for the integral term
 
         args: 
             speed
@@ -41,9 +40,24 @@ class LongitudinalController:
             control (u)
         '''
         
-        # define error from set point target_speed to speed 
+        # define error from set point target_speed to speed
+        error = target_speed - speed
 
         # derive PID elements
+        # proportional gain
+        control = self.KP * error
+
+        # integral gain
+        self.sum_error += self.KI * error
+        self.sum_error = np.clip(self.sum_error, -3, 3)  # windup control TODO
+        control += self.sum_error
+
+        # derivative gain
+        control += self.KP * (error - self.last_error)
+
+        # set attributes
+        self.last_error = error
+        self.last_control = control
 
         return control
 
