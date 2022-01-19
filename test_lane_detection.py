@@ -19,6 +19,8 @@ def key_press(k, mod):
     if k==key.RIGHT: a[0] = +1.0
     if k==key.UP:    a[1] = +1.0
     if k==key.DOWN:  a[2] = +0.8   # set 1.0 for wheels to block to zero rotation
+    if k==key.R:    
+        print('stop')
 
 def key_release(k, mod):
     if k==key.LEFT  and a[0]==-1.0: a[0] = 0
@@ -42,31 +44,33 @@ restart = False
 LD_module = LaneDetection()
 
 # init extra plot
-#fig = plt.figure()
-#plt.ion()
-#plt.show()
+fig = plt.figure()
+plt.ion()
+plt.show()
 count = 0
 while True:
     # perform step
     s, r, done, speed, info = env.step(a)
-    if(count % 100 == 0):
-        plt.imshow(s[:68,:,:])
-        plt.show()
-        grey = LD_module.cut_gray(s)
-        #plt.imshow(grey)
-        plt.show()
-    count += 1
+    # if(count % 100 == 0):
+    #     plt.imshow(s[:68,:,:])
+    #     plt.show()
+    #     grey = LD_module.cut_gray(s)
+    #     #plt.imshow(grey)
+    #     plt.show()
+    # count += 1
     # lane detection
-    #splines = LD_module.lane_detection(s)
+    #[splines,gradient_sum,lane_points] = LD_module.lane_detection(s)
+    LD_module.lane_detection(s)
     
     # reward
     total_reward += r
 
     # outputs during training
-    if steps % 2 == 0 or done:
-        print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
-        print("step {} total_reward {:+0.2f}".format(steps, total_reward))
-        #LD_module.plot_state_lane(s, steps, fig)
+    if steps % 4 == 0 or done:
+        #print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
+        #print("step {} total_reward {:+0.2f}".format(steps, total_reward))
+        #LD_module.plot_state_lane(s, steps, fig, gradient_sum,lane_points)
+        LD_module.plot_state_lane(s, steps, fig)
     steps += 1
     env.render()
     
