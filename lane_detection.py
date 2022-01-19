@@ -5,6 +5,13 @@ from scipy.interpolate import splprep, splev
 from scipy.optimize import minimize
 import time
 
+'''
+Possible improvements:
+    - Removing Car and Tire gradients check not across whole image but only center where the car is (cut_gray , line 76)
+    - Find start points in lane detection not on front row of the car but bottom row of the image bzw consider whole image(find_first_lane_point)
+    - Start point search uses road width of 20. If car is positioned skewed or orthogonal, road width is higher up to infinity -> no start points detected
+    - Instead of looped neighbourhood search across rows, neighbourhood search in local neighbourhood of found points (lane_detection)
+'''
 
 class LaneDetection:
     '''
@@ -67,10 +74,11 @@ class LaneDetection:
         # same for vertical gradient
 
         total_grad = (v_grad + h_grad)> 0 
-        removed_car = state_image_full[:68,:,0] != 204 # remove car gradients
-        removed_tire = np.sum(state_image_full[:68,:,:],axis=2) != 0
-        total_grad[67,45] = False
-        total_grad = total_grad & removed_car & removed_tire
+        removed_car = state_image_full[:68,:,0] != 204 # remove car gradients - only in lower half
+        removed_tire = np.sum(state_image_full[:68,:,:],axis=2) != 0 # remove tire gradients - only in lower half - comes in (0,0,0) and (76,76,76) = 228
+        #removed_tire_brighter = np.sum(state_image_full[:68,:,:],axis=2) != 228 # not needed
+        total_grad[67,45] = False # remove left part outside car that has a positive value from the shift
+        total_grad = total_grad & removed_car & removed_tire 
         total_grad[0,:] = False # remove boarder from shifting 
         total_grad[:,95] = False # remove boarder from shifting
 
@@ -99,9 +107,7 @@ class LaneDetection:
             gradient_sum 68x96x1
 
         '''
-        # There won't be a road Edge in the first rows for a narrow curve
-        gradient_sum = 0
-        return gradient_sum
+        # Implemented in cut_gray
 
 
     def find_maxima_gradient_rowwise(self, gradient_sum):
@@ -118,8 +124,7 @@ class LaneDetection:
             maxima (np.array) 2x Number_maxima
 
         '''
-        argmaxima = 0
-        return argmaxima
+        # no need for this function
 
 
     def find_first_lane_point(self, gradient_sum):
@@ -141,44 +146,6 @@ class LaneDetection:
         lanes_found = False
         row = 0
 
-        # # loop through the rows
-        # while not lanes_found:
-            
-        #     # Find peaks with min distance of at least 3 pixel 
-        #     argmaxima = find_peaks(gradient_sum[row],distance=3)[0]
-
-        #     # if one lane_boundary is found
-        #     if argmaxima.shape[0] == 1:
-        #         lane_boundary1_startpoint = np.array([[argmaxima[0],  row]])
-
-        #         if argmaxima[0] < 48:
-        #             lane_boundary2_startpoint = np.array([[0,  row]])
-        #         else: 
-        #             lane_boundary2_startpoint = np.array([[96,  row]])
-
-        #         lanes_found = True
-            
-        #     # if 2 lane_boundaries are found
-        #     elif argmaxima.shape[0] == 2:
-        #         lane_boundary1_startpoint = np.array([[argmaxima[0],  row]])
-        #         lane_boundary2_startpoint = np.array([[argmaxima[1],  row]])
-        #         lanes_found = True
-
-        #     # if more than 2 lane_boundaries are found
-        #     elif argmaxima.shape[0] > 2:
-        #         # if more than two maxima then take the two lanes next to the car, regarding least square
-        #         A = np.argsort((argmaxima - self.car_position[0])**2)
-        #         lane_boundary1_startpoint = np.array([[argmaxima[A[0]],  0]])
-        #         lane_boundary2_startpoint = np.array([[argmaxima[A[1]],  0]])
-        #         lanes_found = True
-
-        #     row += 1
-            
-        #     # if no lane_boundaries are found
-        #     if row == self.cut_size:
-        #         lane_boundary1_startpoint = np.array([[0,  0]])
-        #         lane_boundary2_startpoint = np.array([[0,  0]])
-        #         break
         lane_boundary1_startpoint = np.array([],dtype=int)
         lane_boundary2_startpoint = np.array([],dtype=int)
         while not lanes_found:
@@ -187,12 +154,13 @@ class LaneDetection:
             line_points = np.where(gradient_sum[row] == 1)[0]
             line_points.astype(int)
             if(line_points.size == 2):
+                # assigning smaller point to left and higher value point to right lane 
                 lane_boundary1_startpoint = np.append(lane_boundary1_startpoint,line_points.min())
                 lane_boundary2_startpoint = np.append(lane_boundary2_startpoint,line_points.max())
                 lanes_found = True
             elif(line_points.size > 2):
-                # line_points_diff = abs( line_points[:-1] - line_points[1:] )
-                # index = (np.abs(line_points_diff - 19)).argmin()
+                # calculate distance between all found points. Choose the point pair, whoes distance is closest to the road width of 20px (when centered)
+                # if multiple close candidates exists (road_diff < 6) choose the two starting points, that are closest to the center of the image
                 index_arr = np.zeros((np.arange(line_points.size).sum(),2),dtype=int)
                 count = 0
                 line_points_diff = np.array([])
@@ -201,7 +169,7 @@ class LaneDetection:
                         line_points_diff = np.append(line_points_diff,np.abs(line_points[i] - line_points[j]))
                         index_arr[count] = [i,j]
                         count += 1
-                road_diff = (np.abs(line_points_diff - 20))#.argmin()
+                road_diff = (np.abs(line_points_diff - 20))
                 index = np.argsort(road_diff)
                 best_index_array = np.array([])
                 if np.sum(road_diff < 6) > 0:
@@ -213,6 +181,7 @@ class LaneDetection:
                 lane_boundary2_startpoint = np.append(lane_boundary2_startpoint,line_points[index_arr[best_index][1]])
                 lanes_found = True
             else:
+                # less than 2 lane points found, go to next row
                 row += 1
 
         return lane_boundary1_startpoint, lane_boundary2_startpoint, lanes_found
@@ -234,16 +203,11 @@ class LaneDetection:
         # to gray + find gradients
         gradient_sum = self.cut_gray(state_image_full)
 
-        # edge detection via gradient sum and thresholding
-        #gradient_sum = self.edge_detection(gray_state)
-        #maxima = self.find_maxima_gradient_rowwise(gradient_sum)
-
         # first lane_boundary points
         lane_boundary1_points, lane_boundary2_points, lane_found = self.find_first_lane_point(gradient_sum)
         x1_spline = np.array([0])
         x2_spline = np.array([0])
-        #lane_1 = np.zeros((68,96))
-        #lane_2 = np.zeros((68,96))
+
         # if no lane was found,use lane_boundaries of the preceding step
         if lane_found:
             
@@ -262,26 +226,30 @@ class LaneDetection:
                     point = int(point)
                     dist1 = np.array([])
                     dist2 = np.array([])
+                    # calculate distance (r**2) from nearest lane1 and lane2 point
                     for i in range(0,lane_boundary1_points.size):
                         dist1 = np.append(dist1, (point - lane_boundary1_points[i])**2 + (row - x1_spline[i])**2)
                     for i in range(0,lane_boundary2_points.size):
                         dist2 = np.append(dist2, (point - lane_boundary2_points[i])**2 + (row - x2_spline[i])**2)
                     dist1 = dist1.min()
                     dist2 = dist2.min()
+                    # If point is too far away from line, it may belong to a different part of the road, looping back after a turn
+                    # To assignt this part to the correct lane, assign the rest first and store all far away points in seperated_road_part.
+                    # Loop over seperated parts until all cound be assigned a lane
                     if dist1 > 25 and dist2 > 25:
                         seperated_road_part = np.vstack((seperated_road_part,[[row,point]]))
                         continue
                     if dist1 <  dist2:
                         lane_boundary1_points = np.append(lane_boundary1_points,point)
                         x1_spline = np.append(x1_spline,row)
-                        #lane_1[row,point] = 1
                     else:
                         lane_boundary2_points = np.append(lane_boundary2_points,point)
                         x2_spline = np.append(x2_spline,row)
-                        #lane_2[row,point] = 1
                 row += 1
+            # old_size: check if sperated part got smaller in loop, if not break
             old_size = 999999999999
             new_seperated = np.array([[0,0]])
+            # Loop over seperated parts
             if seperated_road_part.size > 1:
                 while seperated_road_part.size < old_size and seperated_road_part.size > 0:
                     old_size = seperated_road_part.size
@@ -307,6 +275,18 @@ class LaneDetection:
                             #lane_2[row,point] = 1
                     seperated_road_part = new_seperated
 
+            # Cut down to smallest common lane length by finding nearest point on the longer lane from the end point of the short lane
+            # That way a orthogonal cut off is generated, allowing for easy center lane calculation
+            if lane_boundary1_points.size < lane_boundary2_points.size - 10 :
+                cut_off_index = ((lane_boundary2_points - lane_boundary1_points[-1])**2 + (x2_spline - x1_spline[-1])**2).argmin()
+                x2_spline = x2_spline[:cut_off_index]
+                lane_boundary2_points = lane_boundary2_points[:cut_off_index]
+            
+            elif lane_boundary2_points.size < lane_boundary1_points.size - 10 :
+                cut_off_index = ((lane_boundary1_points - lane_boundary2_points[-1])**2 + (x1_spline - x2_spline[-1])**2).argmin()
+                x1_spline = x1_spline[:cut_off_index]
+                lane_boundary1_points = lane_boundary1_points[:cut_off_index]
+
             ##### TODO #####
             # spline fitting using scipy.interpolate.splprep 
             # and the arguments self.spline_smoothness
@@ -318,13 +298,10 @@ class LaneDetection:
                 # Pay attention: the first lane_boundary point might occur twice
                 #lane 1
                 tck, u = splprep([lane_boundary1_points, x1_spline], s=self.spline_smoothness)
-                #lane_boundary1 = splev(u, tck)
                 lane_boundary1 = tck
 
                 #lane 2
                 tck, u = splprep([lane_boundary2_points, x2_spline], s=self.spline_smoothness)
-                #lane_boundary2 = splev(u, tck)
-                #print(u)
                 lane_boundary2 = tck
             else:
                 lane_boundary1 = self.lane_boundary1_old
@@ -339,10 +316,9 @@ class LaneDetection:
         self.lane_boundary2_old = lane_boundary2
 
 
-        # output the spline
+        # other return for additional visualization
         #return [[lane_boundary1, lane_boundary2],gradient_sum, [lane_1, lane_2]]
-        
-
+        return [lane_boundary1, lane_boundary2]
 
     def plot_state_lane(self, state_image_full, steps, fig, gradient_sum=0, lane_points=0, waypoints=[]):
         '''
@@ -353,6 +329,7 @@ class LaneDetection:
         lane_boundary1_points_points = np.array(splev(t, self.lane_boundary1_old))
         lane_boundary2_points_points = np.array(splev(t, self.lane_boundary2_old))
         
+        # commented out additional visualition
         plt.gcf().clear()
         #plt.subplot(221)
         plt.imshow(state_image_full[::-1])
@@ -368,12 +345,15 @@ class LaneDetection:
         plt.gca().axes.get_yaxis().set_visible(False)
 
         # plt.subplot(222)
+        #plt.title('Gradient Sum')
         # plt.imshow(gradient_sum[::-1])
 
         # plt.subplot(223)
+        #plt.title('Left Lane')
         # plt.imshow(lane_points[0][::-1])
 
         # plt.subplot(224)
+        #plt.title('Right Lane')
         # plt.imshow(lane_points[1][::-1])
 
         fig.canvas.flush_events()

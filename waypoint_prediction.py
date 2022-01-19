@@ -19,8 +19,7 @@ def curvature(waypoints):
     args: 
         waypoints [2, num_waypoints] !!!!!
     '''
-
-    return curvature
+    return np.sum((waypoints[2:]-waypoints[1:-1])*(waypoints[1:-1]-waypoints[:-2])/(np.abs(waypoints[2:]-waypoints[1:-1])*np.abs(waypoints[1:-1]-waypoints[:-2])))
 
 
 def smoothing_objective(waypoints, waypoints_center, weight_curvature=40):
@@ -59,28 +58,39 @@ def waypoint_prediction(roadside1_spline, roadside2_spline, num_waypoints=6, way
         ##### TODO #####
      
         # create spline arguments
-
+        t = np.linspace(0, 1, num_waypoints)
+        
         # derive roadside points from spline
+        lane_boundary1_points_points = np.array(splev(t,roadside1_spline))
+        lane_boundary2_points_points = np.array(splev(t,roadside2_spline))
 
         # derive center between corresponding roadside points
+        center = np.around((lane_boundary1_points_points + lane_boundary2_points_points) / 2)
+        way_point_center = np.array([center[0],center[1]])
 
-        # output way_points with shape(2 x Num_waypoints)
-        return way_points
+        # output way_points with shape(2 x Num_waypoints) : (rowsxcolumns)
+        return way_point_center
     
     elif way_type == "smooth":
         ##### TODO #####
 
-        # create spline arguments
-
+         # create spline arguments
+        t = np.linspace(0, 1, num_waypoints)
+        
         # derive roadside points from spline
+        lane_boundary1_points_points = np.array(splev(t,roadside1_spline))
+        lane_boundary2_points_points = np.array(splev(t,roadside2_spline))
 
         # derive center between corresponding roadside points
-        way_point_center = 
+        center = np.around((lane_boundary1_points_points + lane_boundary2_points_points) / 2)
+        way_points_center = np.array([center[0],center[1]])
         
         # optimization
-        way_points = minimize(smoothing_objective, 
-                      (way_points_center), 
-                      args=way_points_center)["x"]
+        way_points = minimize(smoothing_objective, way_points_center, args=way_points_center.reshape(2*way_points_center.shape[1]))["x"]
+
+        # way_points = minimize(smoothing_objective, 
+        #               (way_points_center), 
+        #               args=way_points_center)["x"]
 
         return way_points.reshape(2,-1)
 
@@ -103,5 +113,6 @@ def target_speed_prediction(waypoints, num_waypoints_used=5,
         target_speed (float)
     '''
 
+    target_speed = 1.5
 
     return target_speed
