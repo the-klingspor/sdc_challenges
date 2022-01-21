@@ -60,8 +60,9 @@ class LaneDetection:
         h_diff = np.abs(state_image_full[:68,:,1] - np.hstack((state_image_full[:68,1:,1],np.ones((68,1))*204)))
         h_grad = np.zeros((68,96,12),dtype=bool)
         #for i,value in enumerate([97, 99, 102, 122, 124, 127, 229, 204, 26, 51]):
-        for i,value in enumerate([97, 99, 102, 122, 124, 127, 153, 150, 148, 102,105,107]):
+        for i,value in enumerate([97, 99, 102, 122, 124, 127, 153, 150, 148, 102, 105, 107]):
             h_grad[:,:,i] = h_diff == value
+
         h_grad = np.sum(h_grad,axis=2)
         # values: boarder green shades to road shades then red-white curve-border to road
         # if the car is next to the gras and covering the last road pixel with its red shape -> the lane won't be detected there
@@ -126,7 +127,6 @@ class LaneDetection:
         '''
         # no need for this function
 
-
     def find_first_lane_point(self, gradient_sum):
         '''
         Find the first lane_boundaries points above the car.
@@ -146,46 +146,49 @@ class LaneDetection:
         lanes_found = False
         row = 0
 
-        lane_boundary1_startpoint = np.array([],dtype=int)
-        lane_boundary2_startpoint = np.array([],dtype=int)
+        lane_boundary1_startpoint = []
+        lane_boundary2_startpoint = []
         while not lanes_found:
             if row == 68:
-                return [],[],False
+                return np.array([]), np.array([]),False
             line_points = np.where(gradient_sum[row] == 1)[0]
             line_points.astype(int)
             if(line_points.size == 2):
                 # assigning smaller point to left and higher value point to right lane 
-                lane_boundary1_startpoint = np.append(lane_boundary1_startpoint,line_points.min())
-                lane_boundary2_startpoint = np.append(lane_boundary2_startpoint,line_points.max())
+                lane_boundary1_startpoint.append(line_points.min())
+                lane_boundary2_startpoint.append(line_points.max())
                 lanes_found = True
             elif(line_points.size > 2):
                 # calculate distance between all found points. Choose the point pair, whoes distance is closest to the road width of 20px (when centered)
                 # if multiple close candidates exists (road_diff < 6) choose the two starting points, that are closest to the center of the image
                 index_arr = np.zeros((np.arange(line_points.size).sum(),2),dtype=int)
                 count = 0
-                line_points_diff = np.array([])
+                line_points_diff = []
                 for i in range(line_points.size):
                     for j in range (i+1,line_points.size):
-                        line_points_diff = np.append(line_points_diff,np.abs(line_points[i] - line_points[j]))
+                        line_points_diff.append(np.abs(line_points[i] - line_points[j]))
                         index_arr[count] = [i,j]
                         count += 1
+                line_points_diff = np.array(line_points_diff)
                 road_diff = (np.abs(line_points_diff - 20))
                 index = np.argsort(road_diff)
-                best_index_array = np.array([])
+                best_index_array = []
                 if np.sum(road_diff < 6) > 0:
                     for i in range(np.sum(road_diff < 6)):
-                        best_index_array = np.append(best_index_array, np.abs(index_arr[index[i]].mean() - 48))
+                        best_index_array.append(np.abs(index_arr[index[i]].mean() - 48))
+                    best_index_array = np.array(best_index_array)
                     best_index = index[best_index_array.argmin()]
-                else : best_index = 0
-                lane_boundary1_startpoint = np.append(lane_boundary1_startpoint,line_points[index_arr[best_index][0]])
-                lane_boundary2_startpoint = np.append(lane_boundary2_startpoint,line_points[index_arr[best_index][1]])
+                else: best_index = 0
+                lane_boundary1_startpoint.append(line_points[index_arr[best_index][0]])
+                lane_boundary2_startpoint.append(line_points[index_arr[best_index][1]])
                 lanes_found = True
             else:
                 # less than 2 lane points found, go to next row
                 row += 1
+        lane_boundary1_startpoint = np.array(lane_boundary1_startpoint)
+        lane_boundary2_startpoint = np.array(lane_boundary2_startpoint)
 
         return lane_boundary1_startpoint, lane_boundary2_startpoint, lanes_found
-
 
     def lane_detection(self, state_image_full):
         '''
@@ -233,6 +236,14 @@ class LaneDetection:
                         dist2 = np.append(dist2, (point - lane_boundary2_points[i])**2 + (row - x2_spline[i])**2)
                     dist1 = dist1.min()
                     dist2 = dist2.min()
+
+                    print(dist1)
+
+                    dist1 = np.min(np.linalg.norm(point - lane_boundary1_points))
+                    dist2 = np.min(np.linalg.norm(point - lane_boundary2_points))
+
+                    print(dist1)
+
                     # If point is too far away from line, it may belong to a different part of the road, looping back after a turn
                     # To assignt this part to the correct lane, assign the rest first and store all far away points in seperated_road_part.
                     # Loop over seperated parts until all cound be assigned a lane
