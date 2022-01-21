@@ -33,12 +33,13 @@ class LateralController:
             waypoints (np.array) [2, num_waypoints]
             speed (float)
         '''
-        waypoint_1 = np.flip(waypoints[0])
-        waypoint_2 = np.flip(waypoints[1])
+        waypoints = waypoints.T
+        waypoint_1 = waypoints[0]
+        waypoint_2 = waypoints[1]
         waypoint_orientation = waypoint_2 - waypoint_1
         waypoint_orientation /= np.linalg.norm(waypoint_orientation)
-        car_position = np.array([0, 48])  # always static at same position
-        car_orientation = np.array([1, 0])  # always shows directly to the top
+        car_position = np.array([47.5, 0])  # always static at same position
+        car_orientation = np.array([0, 1.0])  # always shows directly to the top
 
         # derive orientation error as the angle of the first path segment to the car orientation
         orientation_error = np.arccos(np.clip(np.dot(waypoint_orientation, car_orientation), -1.0, 1.0))
