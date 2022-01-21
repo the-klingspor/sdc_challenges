@@ -19,8 +19,7 @@ def curvature(waypoints):
     args: 
         waypoints [2, num_waypoints] !!!!!
     '''
-    return np.sum((waypoints[2:]-waypoints[1:-1])*(waypoints[1:-1]-waypoints[:-2])/(np.abs(waypoints[2:]-waypoints[1:-1])*np.abs(waypoints[1:-1]-waypoints[:-2])))
-
+    return np.sum(np.sum((waypoints[:,2:]-waypoints[:,1:-1])*(waypoints[:,1:-1]-waypoints[:,:-2]),axis=0)/np.sqrt(np.sum((waypoints[:,2:]-waypoints[:,1:-1])**2,axis=0) * np.sum((waypoints[:,1:-1]-waypoints[:,:-2])**2,axis=0)))
 
 def smoothing_objective(waypoints, waypoints_center, weight_curvature=40):
     '''
@@ -113,6 +112,6 @@ def target_speed_prediction(waypoints, num_waypoints_used=5,
         target_speed (float)
     '''
 
-    target_speed = 1.5
+    target_speed = (max_speed - offset_speed)*np.exp(-exp_constant*num_waypoints_used-2*curvature(waypoints))
 
     return target_speed

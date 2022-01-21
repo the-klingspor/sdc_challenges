@@ -7,10 +7,11 @@ import time
 
 '''
 Possible improvements:
-    - Removing Car and Tire gradients check not across whole image but only center where the car is (cut_gray , line 76)
+    - Removing Car and Tire gradients check not across whole image but only center where the car is (cut_gray , line 76) -> Save computation time
     - Find start points in lane detection not on front row of the car but bottom row of the image bzw consider whole image(find_first_lane_point)
     - Start point search uses road width of 20. If car is positioned skewed or orthogonal, road width is higher up to infinity -> no start points detected
     - Instead of looped neighbourhood search across rows, neighbourhood search in local neighbourhood of found points (lane_detection)
+    - center line calculation ahead even if only on lane is visible
 '''
 
 class LaneDetection:
@@ -227,22 +228,9 @@ class LaneDetection:
                 line_points = np.where(gradient_sum[row] == 1)[0]
                 for point in line_points:
                     point = int(point)
-                    dist1 = np.array([])
-                    dist2 = np.array([])
-                    # calculate distance (r**2) from nearest lane1 and lane2 point
-                    for i in range(0,lane_boundary1_points.size):
-                        dist1 = np.append(dist1, (point - lane_boundary1_points[i])**2 + (row - x1_spline[i])**2)
-                    for i in range(0,lane_boundary2_points.size):
-                        dist2 = np.append(dist2, (point - lane_boundary2_points[i])**2 + (row - x2_spline[i])**2)
-                    dist1 = dist1.min()
-                    dist2 = dist2.min()
 
-                    print(dist1)
-
-                    dist1 = np.min(np.linalg.norm(point - lane_boundary1_points))
-                    dist2 = np.min(np.linalg.norm(point - lane_boundary2_points))
-
-                    print(dist1)
+                    dist1 = np.min((point - lane_boundary1_points)**2 + (row - x1_spline)**2)
+                    dist2 = np.min((point - lane_boundary2_points)**2 + (row - x2_spline)**2)
 
                     # If point is too far away from line, it may belong to a different part of the road, looping back after a turn
                     # To assignt this part to the correct lane, assign the rest first and store all far away points in seperated_road_part.
@@ -250,7 +238,7 @@ class LaneDetection:
                     if dist1 > 25 and dist2 > 25:
                         seperated_road_part = np.vstack((seperated_road_part,[[row,point]]))
                         continue
-                    if dist1 <  dist2:
+                    if dist1 < dist2:
                         lane_boundary1_points = np.append(lane_boundary1_points,point)
                         x1_spline = np.append(x1_spline,row)
                     else:
@@ -265,18 +253,13 @@ class LaneDetection:
                 while seperated_road_part.size < old_size and seperated_road_part.size > 0:
                     old_size = seperated_road_part.size
                     for row, point in seperated_road_part[::-1][:-1]:
-                        dist1 = np.array([])
-                        dist2 = np.array([])
-                        for i in range(0,lane_boundary1_points.size):
-                            dist1 = np.append(dist1, (point - lane_boundary1_points[i])**2 + (row - x1_spline[i])**2)
-                        for i in range(0,lane_boundary2_points.size):
-                            dist2 = np.append(dist2, (point - lane_boundary2_points[i])**2 + (row - x2_spline[i])**2)
-                        dist1 = dist1.min()
-                        dist2 = dist2.min()
+                        dist1 = np.min((point - lane_boundary1_points) ** 2 + (row - x1_spline) ** 2)
+                        dist2 = np.min((point - lane_boundary2_points) ** 2 + (row - x2_spline) ** 2)
+
                         if dist1 > 25 and dist2 > 25:
                             new_seperated = np.vstack((new_seperated,[[row,point]]))
                             continue
-                        if dist1 <  dist2:
+                        if dist1 < dist2:
                             lane_boundary1_points = np.append(lane_boundary1_points,point)
                             x1_spline = np.append(x1_spline,row)
                             #lane_1[row,point] = 1
