@@ -33,14 +33,21 @@ class LateralController:
             waypoints (np.array) [2, num_waypoints]
             speed (float)
         '''
+        waypoint_1 = np.flip(waypoints[0])
+        waypoint_2 = np.flip(waypoints[1])
+        waypoint_orientation = waypoint_2 - waypoint_1
+        waypoint_orientation /= np.linalg.norm(waypoint_orientation)
+        car_position = np.array([0, 48])  # always static at same position
+        car_orientation = np.array([1, 0])  # always shows directly to the top
+
         # derive orientation error as the angle of the first path segment to the car orientation
-        orientation_error = 0
+        orientation_error = np.arccos(np.clip(np.dot(waypoint_orientation, car_orientation), -1.0, 1.0))
 
         # derive cross track error as distance between desired waypoint at spline parameter equal zero to the car position
-        cross_track_error = 0
+        cross_track_error = np.cross(waypoint_orientation, car_position - waypoint_1)
+        cross_track_error /= np.linalg.norm(waypoint_orientation)
 
         # derive stanley control law
-
         # prevent division by zero by adding a small epsilon
         eps = 1e-6
         cross_track_term = self.gain_constant * cross_track_error / (speed + eps)
@@ -50,6 +57,7 @@ class LateralController:
         steering_angle -= self.damping_constant * (steering_angle - self.previous_steering_angle)
 
         # save steering angle
+        self.previous_steering_angle = steering_angle
 
         # clip to the maximum stering angle (0.4) and rescale the steering action space
         return np.clip(steering_angle, -0.4, 0.4) / 0.4
