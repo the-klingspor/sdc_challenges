@@ -291,11 +291,11 @@ class LaneDetection:
 
                 # Pay attention: the first lane_boundary point might occur twice
                 #lane 1
-                tck, u = splprep([lane_boundary1_points, x1_spline], s=self.spline_smoothness)
+                tck, u = splprep([x1_spline,lane_boundary1_points], s=self.spline_smoothness)
                 lane_boundary1 = tck
 
                 #lane 2
-                tck, u = splprep([lane_boundary2_points, x2_spline], s=self.spline_smoothness)
+                tck, u = splprep([x2_spline,lane_boundary2_points], s=self.spline_smoothness)
                 lane_boundary2 = tck
             else:
                 lane_boundary1 = self.lane_boundary1_old
@@ -327,8 +327,8 @@ class LaneDetection:
         plt.gcf().clear()
         #plt.subplot(221)
         plt.imshow(state_image_full[::-1])
-        plt.plot(lane_boundary1_points_points[0], lane_boundary1_points_points[1]+96-self.cut_size, linewidth=5, color='orange')
-        plt.plot(lane_boundary2_points_points[0], lane_boundary2_points_points[1]+96-self.cut_size, linewidth=5, color='orange')
+        plt.plot(lane_boundary1_points_points[1], lane_boundary1_points_points[0]+96-self.cut_size, linewidth=5, color='orange')
+        plt.plot(lane_boundary2_points_points[1], lane_boundary2_points_points[0]+96-self.cut_size, linewidth=5, color='orange')
         if len(waypoints):
             plt.scatter(waypoints[0], waypoints[1]+96-self.cut_size, color='white')
 
