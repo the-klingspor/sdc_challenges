@@ -50,7 +50,7 @@ class LateralController:
 
         # derive stanley control law
         # prevent division by zero by adding a small epsilon
-        eps = 1e-6
+        eps = 1e-8
         cross_track_term = self.gain_constant * cross_track_error / (speed + eps)
         steering_angle = orientation_error + np.arctan(cross_track_term)
 
@@ -60,7 +60,7 @@ class LateralController:
         # save steering angle
         self.previous_steering_angle = steering_angle
 
-        # clip to the maximum stering angle (0.4) and rescale the steering action space
+        # clip to the maximum steering angle (0.4) and rescale the steering action space
         return np.clip(steering_angle, -0.4, 0.4) / 0.4
 
 

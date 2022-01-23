@@ -97,7 +97,6 @@ def waypoint_prediction(roadside1_spline, roadside2_spline, num_waypoints=6, way
 def target_speed_prediction(waypoints, num_waypoints_used=5,
                             max_speed=60, exp_constant=4.5, offset_speed=30):
     '''
-    ##### TODO #####
     Predict target speed given waypoints
     Implement the function using curvature()
 
@@ -111,6 +110,7 @@ def target_speed_prediction(waypoints, num_waypoints_used=5,
     output:
         target_speed (float)
     '''
+    print(curvature(waypoints))
     curve_factor = -exp_constant * np.abs(num_waypoints_used - 2 - curvature(waypoints))
     target_speed = (max_speed - offset_speed) * np.exp(curve_factor) + offset_speed
 
