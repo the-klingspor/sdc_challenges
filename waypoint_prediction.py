@@ -99,23 +99,44 @@ def waypoint_prediction(roadside1_spline, roadside2_spline, num_waypoints=6, way
         return way_points # np.array([way_points[1],way_points[0]])
 
 
-def target_speed_prediction(waypoints, num_waypoints_used=6,
-                            max_speed=60, exp_constant=4.5, offset_speed=30):
-    '''
-    Predict target speed given waypoints
-    Implement the function using curvature()
+class TargetSpeedPrediction:
+    """
+            num_waypoints_used (default=6)
+            curve_damping (default=0.5)
+            max_speed (default=60)
+            exp_constant (default=4.5)
+            offset_speed (default=30)
 
-    args:
-        waypoints [2,num_waypoints]
-        num_waypoints_used (default=6)
-        max_speed (default=60)
-        exp_constant (default=4.5)
-        offset_speed (default=30)
-    
-    output:
-        target_speed (float)
-    '''
-    curve_factor = -exp_constant * np.abs(num_waypoints_used - 2 - curvature(waypoints))
-    target_speed = (max_speed - offset_speed) * np.exp(curve_factor) + offset_speed
+    """
+    def __init__(self, num_waypoints_used=6, curve_damping_entry=0.5,
+                 curve_damping_exit=0.01, max_speed=60,
+                 exp_constant=4.5, offset_speed=30):
+        self.num_waypoints_used = num_waypoints_used
+        self.curve_damping_entry = curve_damping_entry
+        self.curve_damping_exit = curve_damping_exit
+        self.last_curvature = num_waypoints_used - 2
+        self.max_speed = max_speed
+        self.exp_constant = exp_constant
+        self.offset_speed = offset_speed
 
-    return target_speed
+    def predict(self, waypoints):
+        '''
+        Predict target speed given waypoints
+        Implement the function using curvature()
+
+        args:
+            waypoints [2,num_waypoints]
+            n
+        output:
+            target_speed (float)
+        '''
+        new_curvature = curvature(waypoints)
+        if new_curvature > self.last_curvature:
+            new_curvature = self.curve_damping_exit * curvature(waypoints) + (1 - self.curve_damping_exit) * self.last_curvature
+        else:
+            new_curvature = self.curve_damping_entry * curvature(waypoints) + (1 - self.curve_damping_entry) * self.last_curvature
+        self.last_curvature = new_curvature
+        curve_factor = -self.exp_constant * np.abs(self.num_waypoints_used - 2 - new_curvature)
+        target_speed = (self.max_speed - self.offset_speed) * np.exp(curve_factor) + self.offset_speed
+
+        return target_speed

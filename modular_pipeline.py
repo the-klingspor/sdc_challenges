@@ -11,7 +11,7 @@ from pyvirtualdisplay import Display
 
 from gym.envs.box2d.car_racing import CarRacing
 from lane_detection import LaneDetection
-from waypoint_prediction import waypoint_prediction, target_speed_prediction
+from waypoint_prediction import waypoint_prediction, TargetSpeedPrediction
 from lateral_control import LateralController
 from longitudinal_control import LongitudinalController
 
@@ -34,6 +34,15 @@ def evaluate(env):
         LD_module = LaneDetection()
         LatC_module = LateralController()
         LongC_module = LongitudinalController()
+        num_waypoints = 6
+
+        TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
+                                                   curve_damping_entry=0.1,
+                                                   curve_damping_exit=0.02,
+                                                   max_speed=80,
+                                                   exp_constant=8,
+                                                   offset_speed=30)
+
         reward_per_episode = 0
         for t in range(500):
             # perform step
@@ -46,7 +55,7 @@ def evaluate(env):
 
             # waypoint and target_speed prediction
             waypoints = waypoint_prediction(lane1, lane2)
-            target_speed = target_speed_prediction(waypoints, max_speed=60, exp_constant=4.5)
+            target_speed = TargetSpeed_module.predict(waypoints)
 
             # control
             a[0] = LatC_module.stanley(waypoints, speed)
@@ -57,7 +66,6 @@ def evaluate(env):
             env.render()
 
         print('episode %d \t reward %f' % (episode, reward_per_episode))
-
 
 
 def calculate_score_for_leaderboard(env):
@@ -88,6 +96,16 @@ def calculate_score_for_leaderboard(env):
         LatC_module = LateralController(gain_constant=3.0, damping_constant=0.1)
         LongC_module = LongitudinalController(KP=0.5, KI=1e-5, KD=0.05)
 
+        num_waypoints = 6
+
+        TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
+                                                   curve_damping_entry=0.1,
+                                                   curve_damping_exit=0.02,
+                                                   max_speed=80,
+                                                   exp_constant=8,
+                                                   offset_speed=30)
+
+
         reward_per_episode = 0
         for t in range(600):
             # perform step
@@ -97,8 +115,8 @@ def calculate_score_for_leaderboard(env):
             lane1, lane2 = LD_module.lane_detection(s)
 
             # waypoint and target_speed prediction
-            waypoints = waypoint_prediction(lane1, lane2)
-            target_speed = target_speed_prediction(waypoints, max_speed=60, exp_constant=7)
+            waypoints = waypoint_prediction(lane1, lane2, num_waypoints=num_waypoints)
+            target_speed = TargetSpeed_module.predict(waypoints)
 
             # control
             a[0] = LatC_module.stanley(waypoints, speed)
