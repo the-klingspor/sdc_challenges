@@ -36,10 +36,10 @@ class LaneDetection:
         self.lane_boundary2_old = 0
 
         # consider only green values of the street segments, gras parts and the curve markings to calculate the lane borders
-        street_colors = np.array([102,105,107])
-        gras_colors = np.array([204,229,230])         # bright green is sometimes 229 or 230
-        curve_markings_colors = np.array([0,255])
-        self.color_gradients = np.concatenate((np.abs([street_colors- border_colors for border_colors in np.concatenate((gras_colors,curve_markings_colors))])))
+        # street_colors = np.array([102,105,107])
+        # gras_colors = np.array([204,229,230])         # bright green is sometimes 229 or 230
+        # curve_markings_colors = np.array([0,255])
+        # self.color_gradients = np.concatenate((np.abs([street_colors- border_colors for border_colors in np.concatenate((gras_colors,curve_markings_colors))])))
 
 
     def cut_gray(self, state_image_full):
@@ -55,33 +55,13 @@ class LaneDetection:
             gray_state_image 68x96x1
 
         '''
-        # Weighted RGB
-        #gray_state_image2 = (state_image_full[:68,:,0] * 0.299 + state_image_full[:68,:,0] * 0.587 + state_image_full[:68,:,0] * 0.114)[None]
-
-        # Averaged RGB
-        #gray_state_image = np.mean(state_image_full[:68,:,],axis=2)[None] # shape : (1, 68, 96)
-
         # only Green - Street: (102,102,102) or (105,105,105) or (107,107,107), Gras: (102,229,102) or (102,204,102), Curve Markings: (255,255,255) or (255,0,0), font of the car (last bottom row) (204,0,0), tires (0,0,0)
         # going straight, only the center bottom row show the 204 red front of the car. In some manouviers the front of the car can extend in the second bottom row and tires can be seen. Also motion blure can mix car and tire colors.
         # A difference in more than 97 in the green value is an edge of the road
         h_diff = np.abs(state_image_full[:68,:,1] - np.hstack((state_image_full[:68,1:,1],np.ones((68,1))*204)))
-        h_grad = np.zeros((68,96,self.color_gradients.size),dtype=bool)
-        #for i,value in enumerate([97, 99, 102, 122, 124, 127, 229, 204, 26, 51]):
-        for i,value in enumerate(self.color_gradients):
-            h_grad[:,:,i] = h_diff == value
-
-        h_grad = np.sum(h_grad,axis=2)
-        # values: boarder green shades to road shades then red-white curve-border to road
-        # if the car is next to the gras and covering the last road pixel with its red shape -> the lane won't be detected there
-        # => maybe skip also the bottom two line
         v_diff = np.abs(state_image_full[:68,:,1] - np.vstack((np.ones((1,96))*204,state_image_full[:67,:,1])))
-        v_grad = np.zeros((68,96,self.color_gradients.size),dtype=bool)
-        for i,value in enumerate(self.color_gradients):
-            v_grad[:,:,i] = v_diff == value
-        v_grad = np.sum(v_grad,axis=2)
-        # same for vertical gradient
+        total_grad = (h_diff == 102) | (h_diff == 99) | (h_diff == 97) | (h_diff == 127) | (h_diff == 124) | (h_diff == 122) | (h_diff == 128) | (h_diff == 125) | (h_diff == 123) | (h_diff == 105) | (h_diff == 107) | (h_diff == 153) | (h_diff == 150) | (h_diff == 148) | (v_diff == 102) | (v_diff == 99) | (v_diff == 97) | (v_diff == 127) | (v_diff == 124) | (v_diff == 122) | (v_diff == 128) | (v_diff == 125) | (v_diff == 123) | ( v_diff == 105) | ( v_diff == 107) | ( v_diff == 153) | ( v_diff == 150) | (v_diff == 148)
 
-        total_grad = (v_grad + h_grad)> 0 
         removed_car = state_image_full[:68,:,0] != 204 # remove car gradients - only in lower half
         removed_tire = np.sum(state_image_full[:68,:,:],axis=2) != 0 # remove tire gradients - only in lower half - comes in (0,0,0) and (76,76,76) = 228
         #removed_tire_brighter = np.sum(state_image_full[:68,:,:],axis=2) != 228 # not needed
@@ -90,13 +70,6 @@ class LaneDetection:
         total_grad[0,:] = False # remove boarder from shifting 
         total_grad[:,95] = False # remove boarder from shifting
 
-        # plt.imshow(h_grad)
-        # plt.show()
-        # plt.imshow(v_grad)
-        # plt.show()
-        # plt.imshow(total_grad)
-        # plt.show()
-        #return gray_state_image[::-1] # flip image for some reason
         return total_grad[::-1] # flip image for some reason
 
 
@@ -159,7 +132,7 @@ class LaneDetection:
             if row == 68:
                 return np.array([]), np.array([]),False
             line_points = np.where(gradient_sum[row] == 1)[0]
-            line_points.astype(int)
+            #line_points.astype(int)
             if(line_points.size == 2):
                 # assigning smaller point to left and higher value point to right lane 
                 lane_boundary1_startpoint.append(line_points.min())
@@ -228,6 +201,11 @@ class LaneDetection:
             # 3- delete maximum from maxima
             # 4- stop loop if there is no maximum left 
             #    or if the distance to the next one is too big (>=100)
+            
+            
+            # Possible better implementations: find connected components with of graph representation (BFS)
+            # But speperated Loop only runs max 2 times, mostly only once or not at all on straight curves
+            
             row = 1
             seperated_road_part = np.array([[0,0]])
             while row < 68:
@@ -256,6 +234,7 @@ class LaneDetection:
             new_seperated = np.array([[0,0]])
             # Loop over seperated parts
             if seperated_road_part.size > 1:
+                sep = True
                 while seperated_road_part.size < old_size and seperated_road_part.size > 0:
                     old_size = seperated_road_part.size
                     for row, point in seperated_road_part[::-1][:-1]:
@@ -287,6 +266,7 @@ class LaneDetection:
                 x1_spline = x1_spline[:cut_off_index]
                 lane_boundary1_points = lane_boundary1_points[:cut_off_index]
 
+            
             ##### TODO #####
             # spline fitting using scipy.interpolate.splprep 
             # and the arguments self.spline_smoothness
@@ -343,17 +323,5 @@ class LaneDetection:
         plt.ylim((-0.5,95.5))
         plt.gca().axes.get_xaxis().set_visible(False)
         plt.gca().axes.get_yaxis().set_visible(False)
-
-        # plt.subplot(222)
-        #plt.title('Gradient Sum')
-        # plt.imshow(gradient_sum[::-1])
-
-        # plt.subplot(223)
-        #plt.title('Left Lane')
-        # plt.imshow(lane_points[0][::-1])
-
-        # plt.subplot(224)
-        #plt.title('Right Lane')
-        # plt.imshow(lane_points[1][::-1])
 
         fig.canvas.flush_events()

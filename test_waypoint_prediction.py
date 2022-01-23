@@ -57,7 +57,7 @@ while True:
     lane1, lane2 = LD_module.lane_detection(s)
 
     # waypoint and target_speed prediction
-    waypoints = waypoint_prediction(lane1, lane2, way_type = "smooth",num_waypoints=15)
+    waypoints = waypoint_prediction(lane1, lane2, way_type = "center",num_waypoints=15)
     target_speed = target_speed_prediction(waypoints)
 
     # reward
