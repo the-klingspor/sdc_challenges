@@ -19,7 +19,7 @@ def curvature(waypoints):
     args: 
         waypoints [2, num_waypoints] !!!!!
     '''
-    return np.sum(np.sum((waypoints[:,2:]-waypoints[:,1:-1])*(waypoints[:,1:-1]-waypoints[:,:-2]),axis=0)/np.sqrt(np.sum((waypoints[:,2:]-waypoints[:,1:-1])**2,axis=0) * np.sum((waypoints[:,1:-1]-waypoints[:,:-2])**2,axis=0)))
+    return np.sum(np.sum((waypoints[:,2:]-waypoints[:,1:-1])*(waypoints[:,1:-1]-waypoints[:,:-2]),axis=0)/(np.sqrt(np.sum((waypoints[:,2:]-waypoints[:,1:-1])**2,axis=0)) * np.sqrt(np.sum((waypoints[:,1:-1]-waypoints[:,:-2])**2,axis=0))))
 
 def smoothing_objective(waypoints, waypoints_center, weight_curvature=80):
     '''
