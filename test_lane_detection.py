@@ -51,6 +51,10 @@ count = 0
 while True:
     # perform step
     s, r, done, speed, info = env.step(a)
+    fig = plt.figure()
+    plt.imshow(s)
+    plt.axis('off')
+    plt.savefig("./example_state_image.png")
     # if(count % 100 == 0):
     #     plt.imshow(s[:68,:,:])
     #     plt.show()

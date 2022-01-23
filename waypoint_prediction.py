@@ -19,9 +19,9 @@ def curvature(waypoints):
     args: 
         waypoints [2, num_waypoints] !!!!!
     '''
-    return np.sum(np.sum((waypoints[:,2:]-waypoints[:,1:-1])*(waypoints[:,1:-1]-waypoints[:,:-2]),axis=0)/np.sqrt(np.sum((waypoints[:,2:]-waypoints[:,1:-1])**2,axis=0) * np.sum((waypoints[:,1:-1]-waypoints[:,:-2])**2,axis=0)))
+    return np.sum(np.sum((waypoints[:,2:]-waypoints[:,1:-1])*(waypoints[:,1:-1]-waypoints[:,:-2]),axis=0)/(np.sqrt(np.sum((waypoints[:,2:]-waypoints[:,1:-1])**2,axis=0)) * np.sqrt(np.sum((waypoints[:,1:-1]-waypoints[:,:-2])**2,axis=0))))
 
-def smoothing_objective(waypoints, waypoints_center, weight_curvature=40):
+def smoothing_objective(waypoints, waypoints_center, weight_curvature=80):
     '''
     Objective for path smoothing
 
@@ -90,8 +90,8 @@ def waypoint_prediction(roadside1_spline, roadside2_spline, num_waypoints=6, way
         # way_points = minimize(smoothing_objective, 
         #               (way_points_center), 
         #               args=way_points_center)["x"]
-
-        return way_points.reshape(2,-1)
+        way_points = way_points.reshape(2,-1)
+        return way_points #np.array([way_points[1],way_points[0]])
 
 
 def target_speed_prediction(waypoints, num_waypoints_used=5,
