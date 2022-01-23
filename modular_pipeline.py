@@ -79,14 +79,14 @@ def calculate_score_for_leaderboard(env):
 
     total_reward = 0
 
-    for episode in range(100):
+    for episode in range(len(seeds)):
         env.seed(seeds[episode])
         observation = env.reset()
 
         # init modules of the pipeline
         LD_module = LaneDetection()
-        LatC_module = LateralController()
-        LongC_module = LongitudinalController()
+        LatC_module = LateralController(gain_constant=3.0, damping_constant=0.1)
+        LongC_module = LongitudinalController(KP=0.5, KI=1e-5, KD=0.05)
 
         reward_per_episode = 0
         for t in range(600):
@@ -98,7 +98,7 @@ def calculate_score_for_leaderboard(env):
 
             # waypoint and target_speed prediction
             waypoints = waypoint_prediction(lane1, lane2)
-            target_speed = target_speed_prediction(waypoints, max_speed=60, exp_constant=4.5)
+            target_speed = target_speed_prediction(waypoints, max_speed=60, exp_constant=7)
 
             # control
             a[0] = LatC_module.stanley(waypoints, speed)

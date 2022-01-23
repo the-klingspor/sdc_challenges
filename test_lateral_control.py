@@ -25,7 +25,7 @@ restart = False
 
 # init modules of the pipeline
 LD_module = LaneDetection()
-LatC_module = LateralController()
+LatC_module = LateralController(gain_constant=3.0, damping_constant=0.1)
 
 # init extra plot
 fig = plt.figure()
@@ -40,8 +40,9 @@ while True:
     lane1, lane2 = LD_module.lane_detection(s)
 
     # waypoint and target_speed prediction
-    waypoints = waypoint_prediction(lane1, lane2)
-    target_speed = target_speed_prediction(waypoints)
+    num_waypoints = 6
+    waypoints = waypoint_prediction(lane1, lane2, num_waypoints=num_waypoints)
+    target_speed = target_speed_prediction(waypoints, num_waypoints_used=num_waypoints)
 
     # control with constant gas and no braking
     a[0] = LatC_module.stanley(waypoints, speed)
