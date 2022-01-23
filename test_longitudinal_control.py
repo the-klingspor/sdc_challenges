@@ -28,16 +28,16 @@ LD_module = LaneDetection()
 LatC_module = LateralController(gain_constant=3.0, damping_constant=0.1)
 KP = 0.5
 KI = 1e-5
-KD = 0.1
+KD = 0.2
 LongC_module = LongitudinalController(KP, KI, KD)
 
 num_waypoints = 6
 
 TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
-                                           curve_damping_entry=0.1,
+                                           curve_damping_entry=0.05,
                                            curve_damping_exit=0.02,
                                            max_speed=80,
-                                           exp_constant=8,
+                                           exp_constant=20,
                                            offset_speed=30)
 
 
