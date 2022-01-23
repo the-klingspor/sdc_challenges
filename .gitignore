@@ -6,3 +6,5 @@ obs.png
 *.simg
 experiments*
 __pycache__/
+.ipynb_checkpoints/
+.vscode/

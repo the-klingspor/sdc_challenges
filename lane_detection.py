@@ -35,6 +35,12 @@ class LaneDetection:
         self.lane_boundary1_old = 0
         self.lane_boundary2_old = 0
 
+        # consider only green values of the street segments, gras parts and the curve markings to calculate the lane borders
+        street_colors = np.array([102,105,107])
+        gras_colors = np.array([204,229,230])         # bright green is sometimes 229 or 230
+        curve_markings_colors = np.array([0,255])
+        self.color_gradients = np.concatenate((np.abs([street_colors- border_colors for border_colors in np.concatenate((gras_colors,curve_markings_colors))])))
+
 
     def cut_gray(self, state_image_full):
         '''
@@ -59,9 +65,9 @@ class LaneDetection:
         # going straight, only the center bottom row show the 204 red front of the car. In some manouviers the front of the car can extend in the second bottom row and tires can be seen. Also motion blure can mix car and tire colors.
         # A difference in more than 97 in the green value is an edge of the road
         h_diff = np.abs(state_image_full[:68,:,1] - np.hstack((state_image_full[:68,1:,1],np.ones((68,1))*204)))
-        h_grad = np.zeros((68,96,12),dtype=bool)
+        h_grad = np.zeros((68,96,self.color_gradients.size),dtype=bool)
         #for i,value in enumerate([97, 99, 102, 122, 124, 127, 229, 204, 26, 51]):
-        for i,value in enumerate([97, 99, 102, 122, 124, 127, 153, 150, 148, 102, 105, 107]):
+        for i,value in enumerate(self.color_gradients):
             h_grad[:,:,i] = h_diff == value
 
         h_grad = np.sum(h_grad,axis=2)
@@ -69,8 +75,8 @@ class LaneDetection:
         # if the car is next to the gras and covering the last road pixel with its red shape -> the lane won't be detected there
         # => maybe skip also the bottom two line
         v_diff = np.abs(state_image_full[:68,:,1] - np.vstack((np.ones((1,96))*204,state_image_full[:67,:,1])))
-        v_grad = np.zeros((68,96,12),dtype=bool)
-        for i,value in enumerate([97, 99, 102, 122, 124, 127, 153, 150, 148, 102,105,107]):
+        v_grad = np.zeros((68,96,self.color_gradients.size),dtype=bool)
+        for i,value in enumerate(self.color_gradients):
             v_grad[:,:,i] = v_diff == value
         v_grad = np.sum(v_grad,axis=2)
         # same for vertical gradient
@@ -330,7 +336,7 @@ class LaneDetection:
         plt.plot(lane_boundary1_points_points[1], lane_boundary1_points_points[0]+96-self.cut_size, linewidth=5, color='orange')
         plt.plot(lane_boundary2_points_points[1], lane_boundary2_points_points[0]+96-self.cut_size, linewidth=5, color='orange')
         if len(waypoints):
-            plt.scatter(waypoints[0], waypoints[1]+96-self.cut_size, color='white')
+            plt.scatter(waypoints[1], waypoints[0]+96-self.cut_size, color='white')
 
         plt.axis('off')
         plt.xlim((-0.5,95.5))

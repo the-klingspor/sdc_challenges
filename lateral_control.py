@@ -38,8 +38,8 @@ class LateralController:
         waypoint_2 = waypoints[1]
         waypoint_orientation = waypoint_2 - waypoint_1
         waypoint_orientation /= np.linalg.norm(waypoint_orientation)
-        car_position = np.array([47.5, 0])  # always static at same position
-        car_orientation = np.array([0, 1.0])  # always shows directly to the top
+        car_position = np.array([0, 47])  # always static at same position
+        car_orientation = np.array([1.0, 0])  # always shows directly to the top
 
         # derive orientation error as the angle of the first path segment to the car orientation
         orientation_error = np.arccos(np.clip(np.dot(waypoint_orientation, car_orientation), -1.0, 1.0))
@@ -56,6 +56,9 @@ class LateralController:
 
         # derive damping term
         steering_angle -= self.damping_constant * (steering_angle - self.previous_steering_angle)
+
+        # mmh
+        steering_angle = steering_angle * -1
 
         # save steering angle
         self.previous_steering_angle = steering_angle
