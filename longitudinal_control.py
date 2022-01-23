@@ -5,6 +5,7 @@ from scipy.interpolate import splprep, splev
 from scipy.optimize import minimize
 import time
 
+
 class LongitudinalController:
     '''
     Longitudinal Control using a PID Controller
