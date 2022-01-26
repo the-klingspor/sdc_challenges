@@ -2,7 +2,7 @@ import gym
 from gym.envs.box2d.car_racing import CarRacing
 
 from lane_detection import LaneDetection
-from waypoint_prediction import waypoint_prediction, target_speed_prediction
+from waypoint_prediction import waypoint_prediction
 import matplotlib.pyplot as plt
 import numpy as np
 import pyglet
@@ -57,8 +57,7 @@ while True:
     lane1, lane2 = LD_module.lane_detection(s)
 
     # waypoint and target_speed prediction
-    waypoints = waypoint_prediction(lane1, lane2, way_type = "center",num_waypoints=15)
-    target_speed = target_speed_prediction(waypoints)
+    waypoints = waypoint_prediction(lane1, lane2, way_type = "center",num_waypoints=6)
 
     # reward
     total_reward += r

@@ -4,6 +4,7 @@ from scipy.signal import find_peaks
 from scipy.interpolate import splprep, splev
 from scipy.optimize import minimize
 import time
+from waypoint_prediction import curvature
 
 '''
 Possible improvements:
@@ -316,7 +317,9 @@ class LaneDetection:
         plt.plot(lane_boundary1_points_points[1], lane_boundary1_points_points[0]+96-self.cut_size, linewidth=5, color='orange')
         plt.plot(lane_boundary2_points_points[1], lane_boundary2_points_points[0]+96-self.cut_size, linewidth=5, color='orange')
         if len(waypoints):
+            curv = curvature(waypoints)
             plt.scatter(waypoints[1], waypoints[0]+96-self.cut_size, color='white')
+            plt.text(65,80,"curvature : %.2f" % curv)
 
         plt.axis('off')
         plt.xlim((-0.5,95.5))

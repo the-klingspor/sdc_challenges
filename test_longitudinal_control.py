@@ -10,6 +10,9 @@ import pyglet
 from pyglet import gl
 from pyglet.window import key
 
+# Do you want to plot linemarkings, traget speed , etc ..
+plot = True
+
 # action variables
 a = np.array( [0.0, 0.0, 0.0] )
 
@@ -41,10 +44,13 @@ TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
                                            offset_speed=30)
 
 
-# init extra plot
-fig = plt.figure()
-plt.ion()
-plt.show()
+if plot:
+    fig1 = plt.figure(1)
+    plt.ion()
+    plt.show()
+    fig2 = plt.figure(2)
+    plt.ion()
+    plt.show()
 
 
 while True:
@@ -70,8 +76,11 @@ while True:
         print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
         print("speed {:+0.2f} targetspeed {:+0.2f}".format(speed, target_speed))
 
-        #LD_module.plot_state_lane(s, steps, fig, waypoints=waypoints)
-        LongC_module.plot_speed(speed, target_speed, steps, fig)
+        if(plot):
+            plt.figure(1)
+            LongC_module.plot_speed(speed, target_speed, steps, fig1)
+            plt.figure(2)
+            LD_module.plot_state_lane(s, steps, fig2, waypoints=waypoints)
 
     steps += 1
     env.render()
