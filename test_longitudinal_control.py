@@ -37,11 +37,11 @@ LongC_module = LongitudinalController(KP, KI, KD)
 num_waypoints = 6
 
 TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
-                                           curve_damping_entry=0.05,
-                                           curve_damping_exit=0.02,
+                                           curve_damping_entry=0.5,
+                                           curve_damping_exit=0.08,
                                            max_speed=80,
-                                           exp_constant=20,
-                                           offset_speed=30)
+                                           exp_constant=15,
+                                           offset_speed=40)
 
 
 if plot:
@@ -73,8 +73,8 @@ while True:
 
     # outputs during training
     if steps % 2 == 0 or done:
-        print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
-        print("speed {:+0.2f} targetspeed {:+0.2f}".format(speed, target_speed))
+        # print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
+        # print("speed {:+0.2f} targetspeed {:+0.2f}".format(speed, target_speed))
 
         if(plot):
             plt.figure(1)

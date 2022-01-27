@@ -37,11 +37,11 @@ def evaluate(env):
         num_waypoints = 6
 
         TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
-                                                   curve_damping_entry=0.05,
-                                                   curve_damping_exit=0.02,
+                                                   curve_damping_entry=0.5,
+                                                   curve_damping_exit=0.08,
                                                    max_speed=80,
-                                                   exp_constant=20,
-                                                   offset_speed=30)
+                                                   exp_constant=15,
+                                                   offset_speed=40)
 
         reward_per_episode = 0
         for t in range(600):

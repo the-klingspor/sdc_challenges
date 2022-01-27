@@ -118,6 +118,8 @@ class TargetSpeedPrediction:
         self.max_speed = max_speed
         self.exp_constant = exp_constant
         self.offset_speed = offset_speed
+        self.curve_counter = 0
+        self.curv_treshold = 3.98
 
     def predict(self, waypoints):
         '''
@@ -131,10 +133,26 @@ class TargetSpeedPrediction:
             target_speed (float)
         '''
         new_curvature = curvature(waypoints)
+        
+        # curv_treshold defines, what curves are sharp by their curvature
+        # for these curves the curvature will not be touched until the curve_counter hits 0
+        # that way the car will only steer when it is leaving the curve (new_curvature > self.last_curvature)
+        # for steper turns the cuve_counter gets scaled
+        
         if new_curvature > self.last_curvature:
-            new_curvature = self.curve_damping_exit * curvature(waypoints) + (1 - self.curve_damping_exit) * self.last_curvature
+            if self.last_curvature < self.curv_treshold:
+                if self.curve_counter == 0:
+                    self.curve_counter = 20 + int(90 * (self.curv_treshold - new_curvature))
+                else:
+                    self.curve_counter -= 1
+                print(self.curve_counter)
+                if(self.curve_counter > 0):
+                    new_curvature = self.last_curvature
+            else:
+                new_curvature = self.curve_damping_exit * curvature(waypoints) + (1 - self.curve_damping_exit) * self.last_curvature
         else:
             new_curvature = self.curve_damping_entry * curvature(waypoints) + (1 - self.curve_damping_entry) * self.last_curvature
+            
         self.last_curvature = new_curvature
         curve_factor = -self.exp_constant * np.abs(self.num_waypoints_used - 2 - new_curvature)
         target_speed = (self.max_speed - self.offset_speed) * np.exp(curve_factor) + self.offset_speed
