@@ -79,9 +79,8 @@ def calculate_score_for_leaderboard(env):
     env.render()
     env.reset()
 
-    #seeds = [22597174, 68545857, 75568192, 91140053, 86018367,
-    #         49636746, 66759182, 91294619, 84274995, 31531469]
-    seeds = [i for i in range(20)]
+    seeds = [22597174, 68545857, 75568192, 91140053, 86018367,
+             49636746, 66759182, 91294619, 84274995, 31531469]
     total_reward = 0
 
     for episode in range(len(seeds)):
@@ -98,9 +97,9 @@ def calculate_score_for_leaderboard(env):
         TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
                                                    curve_damping_entry=0.05,
                                                    curve_damping_exit=0.05,
-                                                   max_speed=81,
+                                                   max_speed=80,
                                                    exp_constant=20,
-                                                   offset_speed=41)
+                                                   offset_speed=40)
 
 
         reward_per_episode = 0
