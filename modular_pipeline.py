@@ -97,7 +97,7 @@ def calculate_score_for_leaderboard(env):
 
         TargetSpeed_module = TargetSpeedPrediction(num_waypoints_used=num_waypoints,
                                                    curve_damping_entry=0.05,
-                                                   curve_damping_exit=0.02,
+                                                   curve_damping_exit=0.05,
                                                    max_speed=80,
                                                    exp_constant=20,
                                                    offset_speed=40)
