@@ -134,10 +134,10 @@ class TargetSpeedPrediction:
         '''
         new_curvature = curvature(waypoints)
         
-        # curv_treshold defines, what curves are sharp by their curvature
+        # curv_threshold defines, what curves are sharp by their curvature
         # for these curves the curvature will not be touched until the curve_counter hits 0
         # that way the car will only steer when it is leaving the curve (new_curvature > self.last_curvature)
-        # for steper turns the cuve_counter gets scaled
+        # for steeper turns the curve_counter gets scaled
         
         if new_curvature > self.last_curvature:
             if self.last_curvature < self.curv_treshold:
@@ -145,7 +145,6 @@ class TargetSpeedPrediction:
                     self.curve_counter = 20 + int(90 * (self.curv_treshold - new_curvature))
                 else:
                     self.curve_counter -= 1
-                print(self.curve_counter)
                 if(self.curve_counter > 0):
                     new_curvature = self.last_curvature
             else:

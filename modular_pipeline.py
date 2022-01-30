@@ -79,9 +79,9 @@ def calculate_score_for_leaderboard(env):
     env.render()
     env.reset()
 
-    seeds = [22597174, 68545857, 75568192, 91140053, 86018367,
-             49636746, 66759182, 91294619, 84274995, 31531469]
-    
+    #seeds = [22597174, 68545857, 75568192, 91140053, 86018367,
+    #         49636746, 66759182, 91294619, 84274995, 31531469]
+    seeds = [i for i in range(20)]
     total_reward = 0
 
     for episode in range(len(seeds)):
@@ -90,7 +90,7 @@ def calculate_score_for_leaderboard(env):
 
         # init modules of the pipeline
         LD_module = LaneDetection()
-        LatC_module = LateralController(gain_constant=3.0, damping_constant=0.1)
+        LatC_module = LateralController(gain_constant=3.5, damping_constant=0.1)
         LongC_module = LongitudinalController(KP=0.5, KI=1e-5, KD=0.2)
 
         num_waypoints = 6
@@ -100,7 +100,7 @@ def calculate_score_for_leaderboard(env):
                                                    curve_damping_exit=0.02,
                                                    max_speed=80,
                                                    exp_constant=20,
-                                                   offset_speed=30)
+                                                   offset_speed=40)
 
 
         reward_per_episode = 0
@@ -128,7 +128,7 @@ def calculate_score_for_leaderboard(env):
         total_reward += np.clip(reward_per_episode, 0, np.infty)
 
     print('---------------------------')
-    print(' total score: %f' % (total_reward / 10))
+    print(' total score: %f' % (total_reward / len(seeds)))
     print('---------------------------')
 
 if __name__ == "__main__":
