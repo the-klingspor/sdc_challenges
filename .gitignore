@@ -8,3 +8,4 @@ experiments*
 __pycache__/
 .ipynb_checkpoints/
 .vscode/
+*.npy

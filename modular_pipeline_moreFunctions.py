@@ -140,6 +140,9 @@ def evaluate(env):
 
 
     for episode in range(3):
+        seed = int(random.random()*100000000)
+        print("seed : ",seed)
+        env.seed(seed)
         observation = env.reset()
         # init modules of the pipeline
         LD_module = LaneDetection()
@@ -266,7 +269,7 @@ if __name__ == "__main__":
     elif args.test:
         test(env,args.test)
     else:
-        evaluate(env,args.seed)
+        evaluate(env)
         
     env.close()
     if args.display:
